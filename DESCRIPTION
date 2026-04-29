@@ -3,7 +3,7 @@ Title: Reynolds-Style Boids and Swarm Simulation for R
 Date: 2026-04-29
 Version: 0.3.0
 Authors@R: c(
-    person(given = "Frederic", family = "Bertrand", role = c("aut", "cre"),
+    person(given = "Frederic", family = "Bertrand", role = c("cre", "but"),
            email = "frederic.bertrand@lecnam.net",
            comment = c(ORCID = "0000-0002-0837-8281")))
 Author: Frederic Bertrand [cre, aut] (<https://orcid.org/0000-0002-0837-8281>)
