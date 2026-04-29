@@ -2,7 +2,7 @@
 
 ## Authors
 
-- **Frederic Bertrand**. Author, maintainer.
+- **Frederic Bertrand**. Maintainer, author.
   [](https://orcid.org/0000-0002-0837-8281)
 
 ## Citation
