@@ -33,3 +33,17 @@ A \code{boids_simulation} object.
 \description{
 Generate and simulate a named boids scenario
 }
+\examples{
+sim <- boids_scenario(
+  "schooling_2d",
+  n = 20,
+  steps = 5,
+  record_every = 1,
+  seed = 3
+)
+frames <- as.data.frame(sim)
+table(frames$frame)
+
+sim3d <- boids_scenario("murmuration_3d", n = 15, steps = 3, seed = 4)
+range(as.data.frame(sim3d)$z)
+}

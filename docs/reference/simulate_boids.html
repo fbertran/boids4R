@@ -106,6 +106,40 @@
     <p>A <code>boids_simulation</code> object.</p>
     </div>
 
+    <div class="section level2">
+    <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">state</span> <span class="op">&lt;-</span> <span class="fu"><a href="boids_state.html">boids_state</a></span><span class="op">(</span><span class="fl">12</span>, <span class="st">"2d"</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">world</span> <span class="op">&lt;-</span> <span class="fu"><a href="boids_world.html">boids_world</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="st">"2d"</span>,</span></span>
+<span class="r-in"><span>  boundary <span class="op">=</span> <span class="st">"reflect"</span>,</span></span>
+<span class="r-in"><span>  attractors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fl">0.8</span>, y <span class="op">=</span> <span class="fl">0.2</span>, strength <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">params</span> <span class="op">&lt;-</span> <span class="fu"><a href="boids_params.html">boids_params</a></span><span class="op">(</span><span class="st">"2d"</span>, max_speed <span class="op">=</span> <span class="fl">0.9</span>, noise <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">sim</span> <span class="op">&lt;-</span> <span class="fu">simulate_boids</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">state</span>,</span></span>
+<span class="r-in"><span>  <span class="va">world</span>,</span></span>
+<span class="r-in"><span>  <span class="va">params</span>,</span></span>
+<span class="r-in"><span>  steps <span class="op">=</span> <span class="fl">4</span>,</span></span>
+<span class="r-in"><span>  record_every <span class="op">=</span> <span class="fl">2</span>,</span></span>
+<span class="r-in"><span>  seed <span class="op">=</span> <span class="fl">2</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">sim</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   frame time         id species          x            y z           vx</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     0    0 boid-00001    boid -0.9379653  0.748091387 0 -0.155310145</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     0    0 boid-00002    boid -0.5115044 -0.463585127 0 -0.553674972</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     0    0 boid-00003    boid  0.2914135  1.079365680 0  0.281232730</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     0    0 boid-00004    boid  1.6328312 -0.009203032 0 -0.011233402</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     0    0 boid-00005    boid -1.1932723  0.870474033 0 -0.004047566</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     0    0 boid-00006    boid  1.5935587  1.967624379 0  0.235959053</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            vy vz     speed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1  0.15495644  0 0.2193917</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 -0.01403218  0 0.5538528</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 -0.03894888  0 0.2839170</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -0.36768810  0 0.3678597</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 -0.11953751  0 0.1196060</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6  0.10448539  0 0.2580579</span>
+</code></pre></div>
+    </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

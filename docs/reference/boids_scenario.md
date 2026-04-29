@@ -45,3 +45,24 @@ boids_scenario(
 ## Value
 
 A `boids_simulation` object.
+
+## Examples
+
+``` r
+sim <- boids_scenario(
+  "schooling_2d",
+  n = 20,
+  steps = 5,
+  record_every = 1,
+  seed = 3
+)
+frames <- as.data.frame(sim)
+table(frames$frame)
+#> 
+#>  0  1  2  3  4  5 
+#> 20 20 20 20 20 20 
+
+sim3d <- boids_scenario("murmuration_3d", n = 15, steps = 3, seed = 4)
+range(as.data.frame(sim3d)$z)
+#> [1] -1.198859  1.130472
+```

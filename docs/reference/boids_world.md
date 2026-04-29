@@ -42,3 +42,25 @@ boids_world(
 ## Value
 
 A `boids_world` list.
+
+## Examples
+
+``` r
+bounds <- matrix(
+  c(-2, -1, 2, 1),
+  ncol = 2,
+  dimnames = list(c("x", "y"), c("min", "max"))
+)
+world <- boids_world(
+  "2d",
+  bounds = bounds,
+  boundary = "reflect",
+  obstacles = data.frame(x = 0, y = 0, radius = 0.25),
+  attractors = data.frame(x = 1.5, y = 0.4, strength = 0.5)
+)
+world$boundary
+#> [1] "reflect"
+world$obstacles
+#>   x y radius z
+#> 1 0 0   0.25 0
+```

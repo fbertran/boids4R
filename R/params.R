@@ -8,6 +8,16 @@
 #' @param max_speed,max_force Speed and steering-force limits.
 #' @param noise Random steering noise standard deviation.
 #' @return A `boids_params` list.
+#' @examples
+#' params <- boids_params(
+#'   "2d",
+#'   separation_weight = 1.2,
+#'   alignment_weight = 0.9,
+#'   cohesion_weight = 0.8,
+#'   max_speed = 1.0,
+#'   noise = 0
+#' )
+#' unlist(params[c("separation_weight", "alignment_weight", "max_speed")])
 #' @export
 boids_params <- function(dimension = c("2d", "3d"),
                          separation_weight = 1.45,

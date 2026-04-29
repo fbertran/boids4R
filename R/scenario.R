@@ -7,6 +7,19 @@
 #' @param steps Number of simulation steps.
 #' @param record_every Record every `record_every` steps.
 #' @return A `boids_simulation` object.
+#' @examples
+#' sim <- boids_scenario(
+#'   "schooling_2d",
+#'   n = 20,
+#'   steps = 5,
+#'   record_every = 1,
+#'   seed = 3
+#' )
+#' frames <- as.data.frame(sim)
+#' table(frames$frame)
+#'
+#' sim3d <- boids_scenario("murmuration_3d", n = 15, steps = 3, seed = 4)
+#' range(as.data.frame(sim3d)$z)
 #' @export
 boids_scenario <- function(name = c("murmuration_3d", "predator_avoidance_2d", "obstacle_corridor_2d", "schooling_2d", "mixed_species_3d"),
                            n = 500L,

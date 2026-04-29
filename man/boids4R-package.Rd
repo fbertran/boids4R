@@ -10,6 +10,11 @@
 can consume exported frames or optional adapters, but core \code{boids4R} objects
 do not contain renderer-specific camera, scene, shader, or widget fields.
 }
+\examples{
+sim <- boids_scenario("schooling_2d", n = 12, steps = 3, seed = 1)
+head(as.data.frame(sim))
+
+}
 \seealso{
 Useful links:
 \itemize{

@@ -5,6 +5,8 @@
 - Added a swarm-art vignette showing how recorded frames can be turned into
   trail drawings, time-layered particle prints, negative-space obstacle
   compositions, and depth-coloured 3D projections.
+- Added compact, deterministic examples to exported function documentation so
+  CRAN checks exercise the user-facing API.
 
 # boids4R 0.2.0
 

@@ -5,6 +5,13 @@
 #'
 #' @param x Object to convert.
 #' @param ... Additional arguments.
+#' @examples
+#' sim <- boids_scenario("schooling_2d", n = 15, steps = 3, seed = 5)
+#'
+#' if (requireNamespace("ggWebGL", quietly = TRUE)) {
+#'   spec <- as_ggwebgl_spec(sim, vector_every = 10)
+#'   names(spec)
+#' }
 #' @export
 as_ggwebgl_spec <- function(x, ...) {
   UseMethod("as_ggwebgl_spec")

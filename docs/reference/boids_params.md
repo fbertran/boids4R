@@ -57,3 +57,19 @@ boids_params(
 ## Value
 
 A `boids_params` list.
+
+## Examples
+
+``` r
+params <- boids_params(
+  "2d",
+  separation_weight = 1.2,
+  alignment_weight = 0.9,
+  cohesion_weight = 0.8,
+  max_speed = 1.0,
+  noise = 0
+)
+unlist(params[c("separation_weight", "alignment_weight", "max_speed")])
+#> separation_weight  alignment_weight         max_speed 
+#>               1.2               0.9               1.0 
+```

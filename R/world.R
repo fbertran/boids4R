@@ -7,6 +7,21 @@
 #' @param obstacles,attractors,predators Data frames with coordinate columns.
 #' @param species Optional species definition table.
 #' @return A `boids_world` list.
+#' @examples
+#' bounds <- matrix(
+#'   c(-2, -1, 2, 1),
+#'   ncol = 2,
+#'   dimnames = list(c("x", "y"), c("min", "max"))
+#' )
+#' world <- boids_world(
+#'   "2d",
+#'   bounds = bounds,
+#'   boundary = "reflect",
+#'   obstacles = data.frame(x = 0, y = 0, radius = 0.25),
+#'   attractors = data.frame(x = 1.5, y = 0.4, strength = 0.5)
+#' )
+#' world$boundary
+#' world$obstacles
 #' @export
 boids_world <- function(dimension = c("2d", "3d"),
                         bounds = NULL,

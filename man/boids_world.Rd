@@ -32,3 +32,19 @@ A \code{boids_world} list.
 \description{
 Build a boids simulation world
 }
+\examples{
+bounds <- matrix(
+  c(-2, -1, 2, 1),
+  ncol = 2,
+  dimnames = list(c("x", "y"), c("min", "max"))
+)
+world <- boids_world(
+  "2d",
+  bounds = bounds,
+  boundary = "reflect",
+  obstacles = data.frame(x = 0, y = 0, radius = 0.25),
+  attractors = data.frame(x = 1.5, y = 0.4, strength = 0.5)
+)
+world$boundary
+world$obstacles
+}

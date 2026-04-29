@@ -7,6 +7,18 @@
 #' @param species Species labels, recycled to `n`.
 #' @param seed Optional seed for reproducible initialization.
 #' @return A `boids_state` data frame.
+#' @examples
+#' bounds <- matrix(
+#'   c(-1, -1, 1, 1),
+#'   ncol = 2,
+#'   dimnames = list(c("x", "y"), c("min", "max"))
+#' )
+#' state <- boids_state(6, "2d", bounds = bounds, seed = 1)
+#' head(state)
+#'
+#' positions <- matrix(c(-0.5, 0, 0.5, 0), ncol = 2, byrow = TRUE)
+#' velocities <- matrix(c(0.1, 0, -0.1, 0), ncol = 2, byrow = TRUE)
+#' boids_state(2, "2d", positions = positions, velocities = velocities)
 #' @export
 boids_state <- function(n,
                         dimension = c("2d", "3d"),

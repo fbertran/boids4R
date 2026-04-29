@@ -38,3 +38,21 @@ A \code{boids_simulation} object.
 \description{
 Simulate boids dynamics
 }
+\examples{
+state <- boids_state(12, "2d", seed = 1)
+world <- boids_world(
+  "2d",
+  boundary = "reflect",
+  attractors = data.frame(x = 0.8, y = 0.2, strength = 0.3)
+)
+params <- boids_params("2d", max_speed = 0.9, noise = 0)
+sim <- simulate_boids(
+  state,
+  world,
+  params,
+  steps = 4,
+  record_every = 2,
+  seed = 2
+)
+head(as.data.frame(sim))
+}

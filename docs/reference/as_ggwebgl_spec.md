@@ -18,3 +18,16 @@ as_ggwebgl_spec(x, ...)
 - ...:
 
   Additional arguments.
+
+## Examples
+
+``` r
+sim <- boids_scenario("schooling_2d", n = 15, steps = 3, seed = 5)
+
+if (requireNamespace("ggWebGL", quietly = TRUE)) {
+  spec <- as_ggwebgl_spec(sim, vector_every = 10)
+  names(spec)
+}
+#> [1] "package_version" "labels"          "webgl"           "layer_count"    
+#> [5] "layers"          "render"         
+```
