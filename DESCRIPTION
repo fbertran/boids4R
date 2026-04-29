@@ -1,0 +1,36 @@
+Package: boids4R
+Title: Reynolds-Style Boids and Swarm Simulation for R
+Date: 2026-04-29
+Version: 0.3.0
+Authors@R: c(
+    person(given = "Frederic", family = "Bertrand", role = c("aut", "cre"),
+           email = "frederic.bertrand@lecnam.net",
+           comment = c(ORCID = "0000-0002-0837-8281")))
+Author: Frederic Bertrand [cre, aut] (<https://orcid.org/0000-0002-0837-8281>)
+Maintainer: Frederic Bertrand <frederic.bertrand@lecnam.net>
+Description: Provides deterministic two- and three-dimensional boids and swarm
+    simulations for R. The package implements Reynolds-style separation,
+    alignment, and cohesion rules with optional obstacles, attractors,
+    predators, species parameters, and reproducible frame export. Simulation
+    state is renderer-neutral; optional adapters can hand frame data to
+    visualization packages such as 'ggWebGL'.
+License: GPL-3
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Depends: R (>= 4.1)
+Imports:
+    Rcpp
+Suggests:
+    ggWebGL,
+    htmlwidgets,
+    knitr,
+    pkgdown,
+    rmarkdown,
+    testthat (>= 3.0.0)
+LinkingTo: Rcpp
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+Config/Needs/website: pkgdown
+URL: https://fbertran.github.io/boids4R/, https://github.com/fbertran/boids4R
+BugReports: https://github.com/fbertran/boids4R/issues

@@ -19,8 +19,7 @@ simulation objects.
 
 ## Example
 
-
-``` r
+```{r eval = FALSE}
 library(boids4R)
 
 sim <- boids_scenario("murmuration_3d", n = 400, seed = 1)

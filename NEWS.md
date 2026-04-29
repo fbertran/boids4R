@@ -1,0 +1,25 @@
+# boids4R 0.3.0
+
+- Added a 3D-focused flock, herd, swarm, and school vignette with 2D overhead
+  variants where they clarify the same collective-motion pattern.
+- Added a swarm-art vignette showing how recorded frames can be turned into
+  trail drawings, time-layered particle prints, negative-space obstacle
+  compositions, and depth-coloured 3D projections.
+
+# boids4R 0.2.0
+
+- Added a scenario-gallery vignette covering built-in 2D and 3D swarm
+  scenarios, renderer-neutral frame summaries, species-level diagnostics, base
+  graphics snapshots, and optional `ggWebGL` handoff.
+- Added a custom simulation workflow vignette showing explicit state, world,
+  obstacle, predator, attractor, metric, parameter-sweep, and mixed-species 3D
+  workflows.
+- Updated the obstacle-corridor scenario so initial boid positions are sampled
+  outside obstacle discs.
+- Tuned custom workflow examples so the solid obstacle diagnostics show positive
+  final obstacle clearance while preserving soft steering semantics.
+- Declared `htmlwidgets` as a suggested package for manual WebGL export
+  examples.
+  
+# boids4R 0.1.0
+- Initial commit of the package.
