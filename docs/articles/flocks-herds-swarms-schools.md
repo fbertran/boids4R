@@ -288,11 +288,12 @@ graphics::par(old_par)
 
 ## Animate with ggWebGL
 
-When `ggWebGL` is installed, any of these simulations can be handed to
-the optional adapter for timeline animation.
+When `ggWebGL` 0.4.0 or later is installed, any of these simulations can
+be handed to the optional adapter for timeline animation.
 
 ``` r
-if (requireNamespace("ggWebGL", quietly = TRUE)) {
+if (requireNamespace("ggWebGL", quietly = TRUE) &&
+    utils::packageVersion("ggWebGL") >= "0.4.0") {
   spec <- as_ggwebgl_spec(flock_3d, vector_every = 14, shader = "density_splat")
   spec$render$timeline$autoplay <- TRUE
   ggWebGL::ggWebGL(spec, height = 540)

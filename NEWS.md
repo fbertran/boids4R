@@ -7,6 +7,8 @@
   compositions, and depth-coloured 3D projections.
 - Added compact, deterministic examples to exported function documentation so
   CRAN checks exercise the user-facing API.
+- Declared `ggWebGL (>= 0.4.0)` as the optional WebGL backend now that it is on
+  CRAN, and guarded examples/tests against older adapter APIs.
 
 # boids4R 0.2.0
 

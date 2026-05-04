@@ -18,7 +18,8 @@ adapter without depending on ggWebGL at load time.
 \examples{
 sim <- boids_scenario("schooling_2d", n = 15, steps = 3, seed = 5)
 
-if (requireNamespace("ggWebGL", quietly = TRUE)) {
+if (requireNamespace("ggWebGL", quietly = TRUE) &&
+    utils::packageVersion("ggWebGL") >= "0.4.0") {
   spec <- as_ggwebgl_spec(sim, vector_every = 10)
   names(spec)
 }

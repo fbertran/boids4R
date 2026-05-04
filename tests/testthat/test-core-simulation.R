@@ -83,6 +83,11 @@ test_that("predator and obstacle forces move nearby boids away", {
 
 test_that("optional ggWebGL adapter emits timeline and 3d view metadata", {
   skip_if_not_installed("ggWebGL")
+  skip_if(
+    utils::packageVersion("ggWebGL") < "0.4.0",
+    "ggWebGL >= 0.4.0 is required for the boids4R adapter"
+  )
+
   sim <- boids_scenario("murmuration_3d", n = 20, steps = 4, seed = 9)
   spec <- as_ggwebgl_spec(sim, vector_every = 4)
   expect_equal(spec$render$timeline$filter, "exact")

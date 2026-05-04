@@ -103,11 +103,13 @@ and recorded frames.</p>
 <span><span class="co">#&gt; 5  0 0.1402520</span></span>
 <span><span class="co">#&gt; 6  0 0.2577651</span></span></code></pre></div>
 <p>The same frame table can be handed to visualization packages. If
-<code>ggWebGL</code> is installed, the optional adapter creates point
-and velocity-vector primitives with exact timeline controls.</p>
+<code>ggWebGL</code> 0.4.0 or later is installed, the optional adapter
+creates point and velocity-vector primitives with exact timeline
+controls.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"ggWebGL"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu">ggWebGL</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ggWebGL/man/ggWebGL.html" class="external-link">ggWebGL</a></span><span class="op">(</span><span class="fu"><a href="../reference/as_ggwebgl_spec.html">as_ggwebgl_spec</a></span><span class="op">(</span><span class="va">sim</span><span class="op">)</span>, height <span class="op">=</span> <span class="fl">440</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"ggWebGL"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span>
+<span>    <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html" class="external-link">packageVersion</a></span><span class="op">(</span><span class="st">"ggWebGL"</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="st">"0.4.0"</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu">ggWebGL</span><span class="fu">::</span><span class="fu"><a href="https://fbertran.github.io/ggWebGL/reference/ggWebGL.html" class="external-link">ggWebGL</a></span><span class="op">(</span><span class="fu"><a href="../reference/as_ggwebgl_spec.html">as_ggwebgl_spec</a></span><span class="op">(</span><span class="va">sim</span><span class="op">)</span>, height <span class="op">=</span> <span class="fl">440</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <p>For larger examples, see the scenario gallery and custom simulation
 workflow vignettes. They show obstacle corridors, predator avoidance,
@@ -115,13 +117,18 @@ parameter sweeps, and mixed-species 3D runs using the same
 renderer-neutral frame output.</p>
 <p>To generate a standalone WebGL page for an external browser:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sim</span> <span class="op">&lt;-</span> <span class="fu">boids4R</span><span class="fu">::</span><span class="fu"><a href="../reference/boids_scenario.html">boids_scenario</a></span><span class="op">(</span><span class="st">"murmuration_3d"</span>, n <span class="op">=</span> <span class="fl">400</span>, steps <span class="op">=</span> <span class="fl">150</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"ggWebGL"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>  <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html" class="external-link">packageVersion</a></span><span class="op">(</span><span class="st">"ggWebGL"</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="st">"0.4.0"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">sim</span> <span class="op">&lt;-</span> <span class="fu">boids4R</span><span class="fu">::</span><span class="fu"><a href="../reference/boids_scenario.html">boids_scenario</a></span><span class="op">(</span><span class="st">"murmuration_3d"</span>, n <span class="op">=</span> <span class="fl">400</span>, steps <span class="op">=</span> <span class="fl">150</span>, seed <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">spec</span> <span class="op">&lt;-</span> <span class="fu">boids4R</span><span class="fu">::</span><span class="fu"><a href="../reference/as_ggwebgl_spec.html">as_ggwebgl_spec</a></span><span class="op">(</span><span class="va">sim</span><span class="op">)</span></span>
 <span><span class="va">spec</span><span class="op">$</span><span class="va">render</span><span class="op">$</span><span class="va">timeline</span><span class="op">$</span><span class="va">autoplay</span> <span class="op">&lt;-</span> <span class="cn">TRUE</span></span>
 <span><span class="va">spec</span><span class="op">$</span><span class="va">render</span><span class="op">$</span><span class="va">timeline</span><span class="op">$</span><span class="va">speed</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
 <span></span>
-<span><span class="va">w</span> <span class="op">&lt;-</span> <span class="fu">ggWebGL</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ggWebGL/man/ggWebGL.html" class="external-link">ggWebGL</a></span><span class="op">(</span><span class="va">spec</span>, height <span class="op">=</span> <span class="fl">520</span><span class="op">)</span></span>
+<span><span class="va">w</span> <span class="op">&lt;-</span> <span class="fu">ggWebGL</span><span class="fu">::</span><span class="fu"><a href="https://fbertran.github.io/ggWebGL/reference/ggWebGL.html" class="external-link">ggWebGL</a></span><span class="op">(</span><span class="va">spec</span>, height <span class="op">=</span> <span class="fl">520</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">htmlwidgets</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/htmlwidgets/man/saveWidget.html" class="external-link">saveWidget</a></span><span class="op">(</span><span class="va">w</span>, <span class="st">"boids_murmuration.html"</span>, selfcontained <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/browseURL.html" class="external-link">browseURL</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/normalizePath.html" class="external-link">normalizePath</a></span><span class="op">(</span><span class="st">"boids_murmuration.html"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
@@ -132,7 +139,7 @@ cumulative line trails:</p>
 <span><span class="va">keep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">frames</span><span class="op">$</span><span class="va">id</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">120</span><span class="op">]</span></span>
 <span><span class="va">trail</span> <span class="op">&lt;-</span> <span class="va">frames</span><span class="op">[</span><span class="va">frames</span><span class="op">$</span><span class="va">id</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">keep</span>, <span class="op">]</span></span>
 <span></span>
-<span><span class="va">line_layer</span> <span class="op">&lt;-</span> <span class="fu">ggWebGL</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ggWebGL/man/ggwebgl_layer_lines.html" class="external-link">ggwebgl_layer_lines</a></span><span class="op">(</span></span>
+<span><span class="va">line_layer</span> <span class="op">&lt;-</span> <span class="fu">ggWebGL</span><span class="fu">::</span><span class="fu"><a href="https://fbertran.github.io/ggWebGL/reference/ggwebgl_layer_lines.html" class="external-link">ggwebgl_layer_lines</a></span><span class="op">(</span></span>
 <span>  <span class="va">trail</span>,</span>
 <span>  x <span class="op">=</span> <span class="st">"x"</span>, y <span class="op">=</span> <span class="st">"y"</span>, z <span class="op">=</span> <span class="st">"z"</span>,</span>
 <span>  group <span class="op">=</span> <span class="st">"id"</span>,</span>
@@ -143,7 +150,7 @@ cumulative line trails:</p>
 <span>  time <span class="op">=</span> <span class="st">"time"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">point_layer</span> <span class="op">&lt;-</span> <span class="fu">ggWebGL</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ggWebGL/man/ggwebgl_layer_points.html" class="external-link">ggwebgl_layer_points</a></span><span class="op">(</span></span>
+<span><span class="va">point_layer</span> <span class="op">&lt;-</span> <span class="fu">ggWebGL</span><span class="fu">::</span><span class="fu"><a href="https://fbertran.github.io/ggWebGL/reference/ggwebgl_layer_points.html" class="external-link">ggwebgl_layer_points</a></span><span class="op">(</span></span>
 <span>  <span class="va">frames</span>,</span>
 <span>  x <span class="op">=</span> <span class="st">"x"</span>, y <span class="op">=</span> <span class="st">"y"</span>, z <span class="op">=</span> <span class="st">"z"</span>,</span>
 <span>  colour <span class="op">=</span> <span class="st">"#2563eb"</span>,</span>
@@ -154,12 +161,12 @@ cumulative line trails:</p>
 <span>  time <span class="op">=</span> <span class="st">"time"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">spec</span> <span class="op">&lt;-</span> <span class="fu">ggWebGL</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ggWebGL/man/ggwebgl_spec.html" class="external-link">ggwebgl_spec</a></span><span class="op">(</span></span>
+<span><span class="va">spec</span> <span class="op">&lt;-</span> <span class="fu">ggWebGL</span><span class="fu">::</span><span class="fu"><a href="https://fbertran.github.io/ggWebGL/reference/ggwebgl_spec.html" class="external-link">ggwebgl_spec</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">line_layer</span>, <span class="va">point_layer</span><span class="op">)</span>,</span>
 <span>  webgl <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    view <span class="op">=</span> <span class="fu">ggWebGL</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ggWebGL/man/ggwebgl_view.html" class="external-link">ggwebgl_view</a></span><span class="op">(</span><span class="st">"3d"</span>, controller <span class="op">=</span> <span class="st">"orbit"</span>, projection <span class="op">=</span> <span class="st">"perspective"</span><span class="op">)</span></span>
+<span>    view <span class="op">=</span> <span class="fu">ggWebGL</span><span class="fu">::</span><span class="fu"><a href="https://fbertran.github.io/ggWebGL/reference/ggwebgl_view.html" class="external-link">ggwebgl_view</a></span><span class="op">(</span><span class="st">"3d"</span>, controller <span class="op">=</span> <span class="st">"orbit"</span>, projection <span class="op">=</span> <span class="st">"perspective"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span>,</span>
-<span>  timeline <span class="op">=</span> <span class="fu">ggWebGL</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ggWebGL/man/ggwebgl_timeline.html" class="external-link">ggwebgl_timeline</a></span><span class="op">(</span></span>
+<span>  timeline <span class="op">=</span> <span class="fu">ggWebGL</span><span class="fu">::</span><span class="fu"><a href="https://fbertran.github.io/ggWebGL/reference/ggwebgl_timeline.html" class="external-link">ggwebgl_timeline</a></span><span class="op">(</span></span>
 <span>    frames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">frames</span><span class="op">$</span><span class="va">frame</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>    filter <span class="op">=</span> <span class="st">"cumulative"</span>,</span>
 <span>    autoplay <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -167,7 +174,7 @@ cumulative line trails:</p>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">htmlwidgets</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/htmlwidgets/man/saveWidget.html" class="external-link">saveWidget</a></span><span class="op">(</span><span class="fu">ggWebGL</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/ggWebGL/man/ggWebGL.html" class="external-link">ggWebGL</a></span><span class="op">(</span><span class="va">spec</span>, height <span class="op">=</span> <span class="fl">520</span><span class="op">)</span>, <span class="st">"boids_trails.html"</span><span class="op">)</span></span>
+<span><span class="fu">htmlwidgets</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/htmlwidgets/man/saveWidget.html" class="external-link">saveWidget</a></span><span class="op">(</span><span class="fu">ggWebGL</span><span class="fu">::</span><span class="fu"><a href="https://fbertran.github.io/ggWebGL/reference/ggWebGL.html" class="external-link">ggWebGL</a></span><span class="op">(</span><span class="va">spec</span>, height <span class="op">=</span> <span class="fl">520</span><span class="op">)</span>, <span class="st">"boids_trails.html"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/browseURL.html" class="external-link">browseURL</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/normalizePath.html" class="external-link">normalizePath</a></span><span class="op">(</span><span class="st">"boids_trails.html"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
   </main>
 </div>

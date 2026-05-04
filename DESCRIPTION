@@ -22,7 +22,7 @@ Depends: R (>= 4.1)
 Imports:
     Rcpp
 Suggests:
-    ggWebGL,
+    ggWebGL (>= 0.4.0),
     htmlwidgets,
     knitr,
     pkgdown,

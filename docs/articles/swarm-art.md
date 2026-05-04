@@ -200,7 +200,8 @@ dev.off()
 ```
 
 ``` r
-if (requireNamespace("ggWebGL", quietly = TRUE)) {
+if (requireNamespace("ggWebGL", quietly = TRUE) &&
+    utils::packageVersion("ggWebGL") >= "0.4.0") {
   spec <- as_ggwebgl_spec(depth_sim, vector_every = 18, shader = "density_splat")
   spec$render$timeline$autoplay <- TRUE
   ggWebGL::ggWebGL(spec, height = 540)

@@ -27,11 +27,12 @@ head(frames)
 ```
 
 The same frame table can be handed to visualization packages. If
-`ggWebGL` is installed, the optional adapter creates point and
-velocity-vector primitives with exact timeline controls.
+`ggWebGL` 0.4.0 or later is installed, the optional adapter creates
+point and velocity-vector primitives with exact timeline controls.
 
 ``` r
-if (requireNamespace("ggWebGL", quietly = TRUE)) {
+if (requireNamespace("ggWebGL", quietly = TRUE) &&
+    utils::packageVersion("ggWebGL") >= "0.4.0") {
   ggWebGL::ggWebGL(as_ggwebgl_spec(sim), height = 440)
 }
 ```
@@ -44,6 +45,11 @@ renderer-neutral frame output.
 To generate a standalone WebGL page for an external browser:
 
 ``` r
+stopifnot(
+  requireNamespace("ggWebGL", quietly = TRUE),
+  utils::packageVersion("ggWebGL") >= "0.4.0"
+)
+
 sim <- boids4R::boids_scenario("murmuration_3d", n = 400, steps = 150, seed = 1)
 
 spec <- boids4R::as_ggwebgl_spec(sim)

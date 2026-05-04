@@ -8,7 +8,8 @@
 #' @examples
 #' sim <- boids_scenario("schooling_2d", n = 15, steps = 3, seed = 5)
 #'
-#' if (requireNamespace("ggWebGL", quietly = TRUE)) {
+#' if (requireNamespace("ggWebGL", quietly = TRUE) &&
+#'     utils::packageVersion("ggWebGL") >= "0.4.0") {
 #'   spec <- as_ggwebgl_spec(sim, vector_every = 10)
 #'   names(spec)
 #' }
@@ -25,9 +26,8 @@ as_ggwebgl_spec.boids_simulation <- function(x,
                                              vector_scale = 0.12,
                                              shader = "density_splat",
                                              ...) {
-  if (!requireNamespace("ggWebGL", quietly = TRUE)) {
-    stop("The ggWebGL package is required for as_ggwebgl_spec.boids_simulation().", call. = FALSE)
-  }
+  require_ggwebgl_adapter()
+
   frames <- as.data.frame(x)
   every <- as.integer(every)[[1L]]
   vector_every <- as.integer(vector_every)[[1L]]
@@ -91,4 +91,45 @@ as_ggwebgl_spec.boids_simulation <- function(x,
       controls = TRUE
     )
   )
+}
+
+ggwebgl_min_version <- "0.4.0"
+
+require_ggwebgl_adapter <- function() {
+  if (!requireNamespace("ggWebGL", quietly = TRUE)) {
+    stop(
+      "The ggWebGL package (>= ", ggwebgl_min_version,
+      ") is required for as_ggwebgl_spec.boids_simulation().",
+      call. = FALSE
+    )
+  }
+
+  installed_version <- utils::packageVersion("ggWebGL")
+  if (installed_version < ggwebgl_min_version) {
+    stop(
+      "ggWebGL >= ", ggwebgl_min_version,
+      " is required for as_ggwebgl_spec.boids_simulation(); installed version is ",
+      as.character(installed_version), ".",
+      call. = FALSE
+    )
+  }
+
+  required_exports <- c(
+    "ggwebgl_layer_points",
+    "ggwebgl_layer_vectors",
+    "ggwebgl_spec",
+    "ggwebgl_view",
+    "ggwebgl_selection",
+    "ggwebgl_timeline"
+  )
+  missing_exports <- setdiff(required_exports, getNamespaceExports("ggWebGL"))
+  if (length(missing_exports) > 0L) {
+    stop(
+      "The installed ggWebGL package does not export the API required by boids4R: ",
+      paste(missing_exports, collapse = ", "), ".",
+      call. = FALSE
+    )
+  }
+
+  invisible(TRUE)
 }

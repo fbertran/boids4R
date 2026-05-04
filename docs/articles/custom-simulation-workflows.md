@@ -333,7 +333,8 @@ graphics::legend("topright", legend = names(palette_3d), col = palette_3d, pch =
 ![](custom-simulation-workflows_files/figure-html/mixed-3d-projection-1.png)
 
 ``` r
-if (requireNamespace("ggWebGL", quietly = TRUE)) {
+if (requireNamespace("ggWebGL", quietly = TRUE) &&
+    utils::packageVersion("ggWebGL") >= "0.4.0") {
   ggWebGL::ggWebGL(
     as_ggwebgl_spec(mixed_3d, vector_every = 15),
     height = 540

@@ -217,12 +217,13 @@ graphics::par(old_par)
 
 ## Hand off to ggWebGL
 
-When `ggWebGL` is installed, the same simulation object can be converted
-into a timeline-aware WebGL specification. This step is optional and
-leaves the core simulation object renderer-neutral.
+When `ggWebGL` 0.4.0 or later is installed, the same simulation object
+can be converted into a timeline-aware WebGL specification. This step is
+optional and leaves the core simulation object renderer-neutral.
 
 ``` r
-if (requireNamespace("ggWebGL", quietly = TRUE)) {
+if (requireNamespace("ggWebGL", quietly = TRUE) &&
+    utils::packageVersion("ggWebGL") >= "0.4.0") {
   ggWebGL::ggWebGL(
     as_ggwebgl_spec(sims$mixed_species_3d, vector_every = 12),
     height = 520
