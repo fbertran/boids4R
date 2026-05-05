@@ -98,7 +98,8 @@
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
-<dd><p>Optional seed for deterministic noise.</p></dd>
+<dd><p>Optional integer seed for deterministic noise. When supplied,
+the global R random-number state is not modified.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -124,20 +125,20 @@
 <span class="r-in"><span>  seed <span class="op">=</span> <span class="fl">2</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">sim</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   frame time         id species          x            y z           vx</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1     0    0 boid-00001    boid -0.9379653  0.748091387 0 -0.155310145</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     0    0 boid-00002    boid -0.5115044 -0.463585127 0 -0.553674972</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3     0    0 boid-00003    boid  0.2914135  1.079365680 0  0.281232730</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4     0    0 boid-00004    boid  1.6328312 -0.009203032 0 -0.011233402</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5     0    0 boid-00005    boid -1.1932723  0.870474033 0 -0.004047566</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6     0    0 boid-00006    boid  1.5935587  1.967624379 0  0.235959053</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            vy vz     speed</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1  0.15495644  0 0.2193917</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 -0.01403218  0 0.5538528</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 -0.03894888  0 0.2839170</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 -0.36768810  0 0.3678597</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 -0.11953751  0 0.1196060</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6  0.10448539  0 0.2580579</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   frame time         id species          x          y z           vx</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     0    0 boid-00001    boid -1.9999687  1.3238614 0 -0.024700034</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     0    0 boid-00002    boid -1.4738488 -1.8617116 0 -0.142371844</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     0    0 boid-00003    boid  1.0224213 -1.7861535 0  0.005966604</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     0    0 boid-00004    boid -0.1653995  0.1188008 0 -0.282932210</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     0    0 boid-00005    boid  0.1310689  0.6845975 0 -0.316795802</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     0    0 boid-00006    boid -1.1241633 -1.9692073 0 -0.444897707</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            vy vz      speed</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 -0.01541146  0 0.02911365</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2  0.10727189  0 0.17826105</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 -0.16972742  0 0.16983226</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  0.07166737  0 0.29186786</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5  0.04230388  0 0.31960788</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 -0.40671955  0 0.60278915</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

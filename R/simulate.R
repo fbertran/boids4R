@@ -7,7 +7,8 @@
 #' @param dt Time-step size.
 #' @param record_every Record every `record_every` steps.
 #' @param engine Simulation engine. `rcpp_grid` and `rcpp_naive` are available.
-#' @param seed Optional seed for deterministic noise.
+#' @param seed Optional integer seed for deterministic noise. When supplied,
+#'   the global R random-number state is not modified.
 #' @return A `boids_simulation` object.
 #' @examples
 #' state <- boids_state(12, "2d", seed = 1)
@@ -45,7 +46,8 @@ simulate_boids <- function(state,
   dt <- positive_number(dt, "dt")
   if (!is.finite(steps) || steps < 0L) stop("`steps` must be a non-negative integer.", call. = FALSE)
   if (!is.finite(record_every) || record_every <= 0L) stop("`record_every` must be a positive integer.", call. = FALSE)
-  if (!is.null(seed)) set.seed(seed)
+  seed <- validate_boids_seed(seed)
+  cpp_seed <- if (is.null(seed)) integer() else seed
 
   sim <- boids_simulate_cpp(
     x = state$x,
@@ -66,7 +68,8 @@ simulate_boids <- function(state,
     dt = dt,
     record_every = record_every,
     dimension = if (identical(dimension, "3d")) 3L else 2L,
-    use_grid = identical(engine, "rcpp_grid")
+    use_grid = identical(engine, "rcpp_grid"),
+    seed = cpp_seed
   )
 
   out <- list(
@@ -96,4 +99,11 @@ as_numeric_matrix <- function(x, cols) {
   mat <- as.matrix(x[, cols, drop = FALSE])
   storage.mode(mat) <- "double"
   mat
+}
+
+validate_boids_seed <- function(seed) {
+  if (is.null(seed)) return(NULL)
+  seed <- as.integer(seed)[[1L]]
+  if (!is.finite(seed)) stop("`seed` must be a finite integer.", call. = FALSE)
+  seed
 }

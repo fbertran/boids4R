@@ -1,16 +1,15 @@
-# Flocks, Herds, Swarms, and Schools
+## ----include = FALSE----------------------------------------------------------
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
 
-The same boids rules can be tuned to read as different collective-motion
-patterns. This vignette uses 3D examples as the main view, then adds 2D
-overhead variants where they help explain the movement.
-
-``` r
+## -----------------------------------------------------------------------------
 library(boids4R)
-```
 
-## Helpers
-
-``` r
+## -----------------------------------------------------------------------------
 final_frame <- function(sim) {
   frames <- as.data.frame(sim)
   frames[frames$frame == max(frames$frame), , drop = FALSE]
@@ -74,16 +73,8 @@ draw_two_projections <- function(sim, title) {
   draw_projection(sim, paste(title, "x/z"), "x", "z")
   graphics::par(old_par)
 }
-```
 
-## Build example simulations
-
-Flocks and swarms use the named 3D scenarios. The school example narrows
-the 3D bounds into a water-column shape. The herd example is also 3D,
-but with a shallow vertical extent to represent animals moving over
-uneven ground.
-
-``` r
+## -----------------------------------------------------------------------------
 flock_3d <- boids_scenario(
   "murmuration_3d",
   n = 180,
@@ -176,11 +167,8 @@ herd_3d <- simulate_boids(
   record_every = 5,
   seed = 506
 )
-```
 
-## Compare the 3D examples
-
-``` r
+## -----------------------------------------------------------------------------
 examples_3d <- list(
   flock = flock_3d,
   herd = herd_3d,
@@ -189,52 +177,20 @@ examples_3d <- list(
 )
 
 do.call(rbind, Map(movement_summary, examples_3d, names(examples_3d)))
-#>         label dimension boids            species frames mean_speed xy_spread
-#> flock   flock        3d   180               boid     15      1.194     1.446
-#> herd     herd        3d   150 edge, lead, middle     16      1.050     0.431
-#> swarm   swarm        3d   180  kite, swift, tern     15      1.232     1.289
-#> school school        3d   170               boid     15      1.195     1.006
-#>        z_spread mean_nearest_neighbor
-#> flock     0.634                 0.253
-#> herd      0.069                 0.091
-#> swarm     0.588                 0.254
-#> school    0.453                 0.212
-```
 
-The x/y view shows the collective shape from above. The x/z view reveals
-which examples use a full 3D volume and which stay near a ground or
-water layer.
-
-``` r
+## ----flock-3d-projection, fig.width = 8, fig.height = 4-----------------------
 draw_two_projections(flock_3d, "flock")
-```
 
-![](flocks-herds-swarms-schools_files/figure-html/flock-3d-projection-1.png)
-
-``` r
+## ----herd-3d-projection, fig.width = 8, fig.height = 4------------------------
 draw_two_projections(herd_3d, "herd")
-```
 
-![](flocks-herds-swarms-schools_files/figure-html/herd-3d-projection-1.png)
-
-``` r
+## ----swarm-3d-projection, fig.width = 8, fig.height = 4-----------------------
 draw_two_projections(swarm_3d, "swarm")
-```
 
-![](flocks-herds-swarms-schools_files/figure-html/swarm-3d-projection-1.png)
-
-``` r
+## ----school-3d-projection, fig.width = 8, fig.height = 4----------------------
 draw_two_projections(school_3d, "school")
-```
 
-![](flocks-herds-swarms-schools_files/figure-html/school-3d-projection-1.png)
-
-## 2D variants
-
-Overhead 2D examples are useful for corridor, schooling, and avoidance
-experiments where the top-down geometry is the main story.
-
-``` r
+## -----------------------------------------------------------------------------
 flock_2d <- boids_scenario(
   "schooling_2d",
   n = 130,
@@ -266,36 +222,19 @@ examples_2d <- list(
 )
 
 do.call(rbind, Map(movement_summary, examples_2d, names(examples_2d)))
-#>                           label dimension boids       species frames mean_speed
-#> top_down_flock   top_down_flock        2d   130          boid     13      1.147
-#> avoidance_herd   avoidance_herd        2d   130 school, scout     14      0.906
-#> obstacle_school obstacle_school        2d   130          boid     14      0.999
-#>                 xy_spread z_spread mean_nearest_neighbor
-#> top_down_flock      1.142        0                 0.144
-#> avoidance_herd      1.658        0                 0.118
-#> obstacle_school     1.279        0                 0.134
-```
 
-``` r
+## ----two-d-variants, fig.width = 8, fig.height = 8----------------------------
 old_par <- graphics::par(mfrow = c(2, 2), mar = c(3, 3, 3, 1))
 draw_projection(flock_2d, "2D top-down flock", "x", "y")
 draw_projection(herd_2d, "2D avoidance herd", "x", "y")
 draw_projection(school_2d, "2D obstacle school", "x", "y")
 graphics::par(old_par)
-```
 
-![](flocks-herds-swarms-schools_files/figure-html/two-d-variants-1.png)
+## ----eval = FALSE-------------------------------------------------------------
+# if (requireNamespace("ggWebGL", quietly = TRUE) &&
+#     utils::packageVersion("ggWebGL") >= "0.4.0") {
+#   spec <- as_ggwebgl_spec(flock_3d, vector_every = 14, shader = "density_splat")
+#   spec$render$timeline$autoplay <- TRUE
+#   ggWebGL::ggWebGL(spec, height = 540)
+# }
 
-## Animate with ggWebGL
-
-When `ggWebGL` 0.4.0 or later is installed, any of these simulations can
-be handed to the optional adapter for timeline animation.
-
-``` r
-if (requireNamespace("ggWebGL", quietly = TRUE) &&
-    utils::packageVersion("ggWebGL") >= "0.4.0") {
-  spec <- as_ggwebgl_spec(flock_3d, vector_every = 14, shader = "density_splat")
-  spec$render$timeline$autoplay <- TRUE
-  ggWebGL::ggWebGL(spec, height = 540)
-}
-```

@@ -11,11 +11,10 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // boids_simulate_cpp
-DataFrame boids_simulate_cpp(NumericVector x, NumericVector y, NumericVector z, NumericVector vx, NumericVector vy, NumericVector vz, CharacterVector ids, CharacterVector species, NumericMatrix bounds, std::string boundary, NumericMatrix obstacles, NumericMatrix attractors, NumericMatrix predators, NumericVector params, int steps, double dt, int record_every, int dimension, bool use_grid);
-RcppExport SEXP _boids4R_boids_simulate_cpp(SEXP xSEXP, SEXP ySEXP, SEXP zSEXP, SEXP vxSEXP, SEXP vySEXP, SEXP vzSEXP, SEXP idsSEXP, SEXP speciesSEXP, SEXP boundsSEXP, SEXP boundarySEXP, SEXP obstaclesSEXP, SEXP attractorsSEXP, SEXP predatorsSEXP, SEXP paramsSEXP, SEXP stepsSEXP, SEXP dtSEXP, SEXP record_everySEXP, SEXP dimensionSEXP, SEXP use_gridSEXP) {
+DataFrame boids_simulate_cpp(NumericVector x, NumericVector y, NumericVector z, NumericVector vx, NumericVector vy, NumericVector vz, CharacterVector ids, CharacterVector species, NumericMatrix bounds, std::string boundary, NumericMatrix obstacles, NumericMatrix attractors, NumericMatrix predators, NumericVector params, int steps, double dt, int record_every, int dimension, bool use_grid, IntegerVector seed);
+RcppExport SEXP _boids4R_boids_simulate_cpp(SEXP xSEXP, SEXP ySEXP, SEXP zSEXP, SEXP vxSEXP, SEXP vySEXP, SEXP vzSEXP, SEXP idsSEXP, SEXP speciesSEXP, SEXP boundsSEXP, SEXP boundarySEXP, SEXP obstaclesSEXP, SEXP attractorsSEXP, SEXP predatorsSEXP, SEXP paramsSEXP, SEXP stepsSEXP, SEXP dtSEXP, SEXP record_everySEXP, SEXP dimensionSEXP, SEXP use_gridSEXP, SEXP seedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
     Rcpp::traits::input_parameter< NumericVector >::type z(zSEXP);
@@ -35,13 +34,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type record_every(record_everySEXP);
     Rcpp::traits::input_parameter< int >::type dimension(dimensionSEXP);
     Rcpp::traits::input_parameter< bool >::type use_grid(use_gridSEXP);
-    rcpp_result_gen = Rcpp::wrap(boids_simulate_cpp(x, y, z, vx, vy, vz, ids, species, bounds, boundary, obstacles, attractors, predators, params, steps, dt, record_every, dimension, use_grid));
+    Rcpp::traits::input_parameter< IntegerVector >::type seed(seedSEXP);
+    rcpp_result_gen = Rcpp::wrap(boids_simulate_cpp(x, y, z, vx, vy, vz, ids, species, bounds, boundary, obstacles, attractors, predators, params, steps, dt, record_every, dimension, use_grid, seed));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_boids4R_boids_simulate_cpp", (DL_FUNC) &_boids4R_boids_simulate_cpp, 19},
+    {"_boids4R_boids_simulate_cpp", (DL_FUNC) &_boids4R_boids_simulate_cpp, 20},
     {NULL, NULL, 0}
 };
 

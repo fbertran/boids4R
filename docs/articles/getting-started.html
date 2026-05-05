@@ -88,20 +88,20 @@ and recorded frames.</p>
 <span><span class="va">sim</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/boids_scenario.html">boids_scenario</a></span><span class="op">(</span><span class="st">"schooling_2d"</span>, n <span class="op">=</span> <span class="fl">80</span>, steps <span class="op">=</span> <span class="fl">20</span>, seed <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
 <span><span class="va">frames</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">sim</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">frames</span><span class="op">)</span></span>
-<span><span class="co">#&gt;   frame time         id species         x          y z           vx          vy</span></span>
-<span><span class="co">#&gt; 1     0    0 boid-00001    boid -1.894812  0.1212369 0  0.001064510 -0.42168526</span></span>
-<span><span class="co">#&gt; 2     0    0 boid-00002    boid  1.398211  1.0956112 0 -0.318514888  0.31179245</span></span>
-<span><span class="co">#&gt; 3     0    0 boid-00003    boid  1.947536 -1.0908581 0 -0.050527585 -0.44254822</span></span>
-<span><span class="co">#&gt; 4     0    0 boid-00004    boid -1.014720 -0.7459710 0  0.291116470  0.05570897</span></span>
-<span><span class="co">#&gt; 5     0    0 boid-00005    boid -1.454868  0.6333988 0 -0.005844852 -0.14013011</span></span>
-<span><span class="co">#&gt; 6     0    0 boid-00006    boid -2.050859 -0.6898092 0  0.224289187 -0.12703239</span></span>
-<span><span class="co">#&gt;   vz     speed</span></span>
-<span><span class="co">#&gt; 1  0 0.4216866</span></span>
-<span><span class="co">#&gt; 2  0 0.4457199</span></span>
-<span><span class="co">#&gt; 3  0 0.4454234</span></span>
-<span><span class="co">#&gt; 4  0 0.2963989</span></span>
-<span><span class="co">#&gt; 5  0 0.1402520</span></span>
-<span><span class="co">#&gt; 6  0 0.2577651</span></span></code></pre></div>
+<span><span class="co">#&gt;   frame time         id species           x           y z          vx</span></span>
+<span><span class="co">#&gt; 1     0    0 boid-00001    boid -2.19958677  1.25804205 0 -0.02683391</span></span>
+<span><span class="co">#&gt; 2     0    0 boid-00002    boid  0.34519521  0.01271507 0  0.05059609</span></span>
+<span><span class="co">#&gt; 3     0    0 boid-00003    boid -1.90403899 -0.89780400 0  0.13404070</span></span>
+<span><span class="co">#&gt; 4     0    0 boid-00004    boid  0.01672697 -0.69175552 0  0.15357851</span></span>
+<span><span class="co">#&gt; 5     0    0 boid-00005    boid -0.46988986 -0.23499981 0 -0.07141984</span></span>
+<span><span class="co">#&gt; 6     0    0 boid-00006    boid  0.56104504  0.15811094 0  0.21125602</span></span>
+<span><span class="co">#&gt;            vy vz      speed</span></span>
+<span><span class="co">#&gt; 1  0.02341728  0 0.03561499</span></span>
+<span><span class="co">#&gt; 2 -0.40515990  0 0.40830688</span></span>
+<span><span class="co">#&gt; 3 -0.13518897  0 0.19037586</span></span>
+<span><span class="co">#&gt; 4 -0.29706520  0 0.33441604</span></span>
+<span><span class="co">#&gt; 5  0.09770255  0 0.12102306</span></span>
+<span><span class="co">#&gt; 6 -0.10675316  0 0.23669674</span></span></code></pre></div>
 <p>The same frame table can be handed to visualization packages. If
 <code>ggWebGL</code> 0.4.0 or later is installed, the optional adapter
 creates point and velocity-vector primitives with exact timeline

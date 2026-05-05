@@ -30,7 +30,8 @@ simulate_boids(
 
 \item{engine}{Simulation engine. \code{rcpp_grid} and \code{rcpp_naive} are available.}
 
-\item{seed}{Optional seed for deterministic noise.}
+\item{seed}{Optional integer seed for deterministic noise. When supplied,
+the global R random-number state is not modified.}
 }
 \value{
 A \code{boids_simulation} object.

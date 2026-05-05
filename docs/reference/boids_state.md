@@ -12,7 +12,8 @@ boids_state(
   positions = NULL,
   velocities = NULL,
   species = "boid",
-  seed = NULL
+  seed = NULL,
+  .rng = NULL
 )
 ```
 
@@ -40,7 +41,13 @@ boids_state(
 
 - seed:
 
-  Optional seed for reproducible initialization.
+  Optional integer seed for reproducible initialization. When supplied,
+  a package-local generator is used and the global R random-number state
+  is not modified.
+
+- .rng:
+
+  Internal package-local random-number generator.
 
 ## Value
 
@@ -56,13 +63,13 @@ bounds <- matrix(
 )
 state <- boids_state(6, "2d", bounds = bounds, seed = 1)
 head(state)
-#>           id species          x          y z          vx           vy vz
-#> 1 boid-00001    boid -0.4689827  0.8893505 0  0.12185726 -0.155310145  0
-#> 2 boid-00002    boid -0.2557522  0.3215956 0  0.18458118 -0.553674972  0
-#> 3 boid-00003    boid  0.1457067  0.2582281 0  0.14394534  0.281232730  0
-#> 4 boid-00004    boid  0.8164156 -0.8764275 0 -0.07634710 -0.011233402  0
-#> 5 boid-00005    boid -0.5966361 -0.5880509 0  0.37794529 -0.004047566  0
-#> 6 boid-00006    boid  0.7967794 -0.6468865 0  0.09746081  0.235959053  0
+#>           id species           x           y z          vx          vy vz
+#> 1 boid-00001    boid -0.99998435 -0.90591077 0 -0.05886229  0.16011908  0
+#> 2 boid-00002    boid -0.73692442  0.35772943 0 -0.14028945 -0.23193187  0
+#> 3 boid-00003    boid  0.51121064  0.35859281 0 -0.54979332 -0.22007277  0
+#> 4 boid-00004    boid -0.08269974  0.86938579 0 -0.34397065 -0.03759543  0
+#> 5 boid-00005    boid  0.06553447 -0.23299585 0  0.54818010  0.65333705  0
+#> 6 boid-00006    boid -0.56208163  0.03883274 0 -0.25612000  0.42602467  0
 
 positions <- matrix(c(-0.5, 0, 0.5, 0), ncol = 2, byrow = TRUE)
 velocities <- matrix(c(0.1, 0, -0.1, 0), ncol = 2, byrow = TRUE)

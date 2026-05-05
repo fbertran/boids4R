@@ -1,11 +1,12 @@
-# Scenario Gallery
+## ----include = FALSE----------------------------------------------------------
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
 
-`boids4R` includes named scenarios for common swarm motifs: compact
-schools, obstacle corridors, predator avoidance, and 3D murmurations.
-The examples below run each scenario with a fixed seed, then summarize
-the recorded frames with plain data-frame operations.
-
-``` r
+## -----------------------------------------------------------------------------
 library(boids4R)
 
 gallery <- data.frame(
@@ -35,15 +36,8 @@ sims <- setNames(
   }),
   gallery$scenario
 )
-```
 
-## Compare recorded swarms
-
-A simulation stores every recorded boid as one row per frame. This makes
-it straightforward to compute summaries without any renderer-specific
-object model.
-
-``` r
+## -----------------------------------------------------------------------------
 final_frame <- function(sim) {
   frames <- as.data.frame(sim)
   frames[frames$frame == max(frames$frame), , drop = FALSE]
@@ -84,31 +78,8 @@ scenario_summary <- function(sim) {
 }
 
 do.call(rbind, lapply(sims, scenario_summary))
-#>                                    scenario dimension boids           species
-#> schooling_2d                   schooling_2d        2d   120              boid
-#> obstacle_corridor_2d   obstacle_corridor_2d        2d   120              boid
-#> predator_avoidance_2d predator_avoidance_2d        2d   120     school, scout
-#> murmuration_3d               murmuration_3d        3d   160              boid
-#> mixed_species_3d           mixed_species_3d        3d   150 kite, swift, tern
-#>                       recorded_frames mean_final_speed mean_final_spread
-#> schooling_2d                       13            1.185             1.413
-#> obstacle_corridor_2d               15            0.920             1.468
-#> predator_avoidance_2d              15            0.932             1.757
-#> murmuration_3d                     12            1.188             1.478
-#> mixed_species_3d                   12            1.192             1.700
-#>                       mean_nearest_neighbor
-#> schooling_2d                          0.174
-#> obstacle_corridor_2d                  0.150
-#> predator_avoidance_2d                 0.139
-#> murmuration_3d                        0.255
-#> mixed_species_3d                      0.308
-```
 
-The same summaries can be split by species. This is useful for mixed
-flocks or cases where scouts and schooling agents are initialized
-together.
-
-``` r
+## -----------------------------------------------------------------------------
 species_speed <- do.call(rbind, lapply(sims, function(sim) {
   final <- final_frame(sim)
   out <- stats::aggregate(speed ~ species, final, mean)
@@ -118,26 +89,8 @@ species_speed <- do.call(rbind, lapply(sims, function(sim) {
 }))
 
 species_speed
-#>                                      scenario species mean_final_speed
-#> schooling_2d                     schooling_2d    boid            1.185
-#> obstacle_corridor_2d     obstacle_corridor_2d    boid            0.920
-#> predator_avoidance_2d.1 predator_avoidance_2d  school            0.936
-#> predator_avoidance_2d.2 predator_avoidance_2d   scout            0.928
-#> murmuration_3d                 murmuration_3d    boid            1.188
-#> mixed_species_3d.1           mixed_species_3d    kite            1.198
-#> mixed_species_3d.2           mixed_species_3d   swift            1.197
-#> mixed_species_3d.3           mixed_species_3d    tern            1.181
-```
 
-## Snapshot plots
-
-The frame table is also enough for quick base-R diagnostics. The helper
-below draws a final-frame x/y projection, including obstacles,
-attractors, and predator influence radii when the scenario defines them.
-For 3D scenarios this is an overhead projection; point size varies with
-the z coordinate.
-
-``` r
+## -----------------------------------------------------------------------------
 scenario_palette <- function(species) {
   keys <- sort(unique(species))
   stats::setNames(grDevices::hcl.colors(length(keys), "Dark 3"), keys)
@@ -199,34 +152,21 @@ draw_snapshot <- function(sim) {
     cex = 0.75
   )
 }
-```
 
-``` r
+## ----scenario-snapshots, fig.width = 8, fig.height = 8------------------------
 old_par <- graphics::par(mfrow = c(2, 2), mar = c(3, 3, 3, 1))
 draw_snapshot(sims$schooling_2d)
 draw_snapshot(sims$obstacle_corridor_2d)
 draw_snapshot(sims$predator_avoidance_2d)
 draw_snapshot(sims$murmuration_3d)
-```
-
-![](scenario-gallery_files/figure-html/scenario-snapshots-1.png)
-
-``` r
 graphics::par(old_par)
-```
 
-## Hand off to ggWebGL
+## ----eval = FALSE-------------------------------------------------------------
+# if (requireNamespace("ggWebGL", quietly = TRUE) &&
+#     utils::packageVersion("ggWebGL") >= "0.4.0") {
+#   ggWebGL::ggWebGL(
+#     as_ggwebgl_spec(sims$mixed_species_3d, vector_every = 12),
+#     height = 520
+#   )
+# }
 
-When `ggWebGL` 0.4.0 or later is installed, the same simulation object
-can be converted into a timeline-aware WebGL specification. This step is
-optional and leaves the core simulation object renderer-neutral.
-
-``` r
-if (requireNamespace("ggWebGL", quietly = TRUE) &&
-    utils::packageVersion("ggWebGL") >= "0.4.0") {
-  ggWebGL::ggWebGL(
-    as_ggwebgl_spec(sims$mixed_species_3d, vector_every = 12),
-    height = 520
-  )
-}
-```

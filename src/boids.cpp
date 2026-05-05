@@ -1,6 +1,7 @@
 #include <Rcpp.h>
 #include <algorithm>
 #include <cmath>
+#include <random>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -62,7 +63,7 @@ static void apply_boundary(Vec3& p, Vec3& v, const NumericMatrix& bounds, const 
   if (dimension == 2) { p.z = 0; v.z = 0; }
 }
 
-// [[Rcpp::export]]
+// [[Rcpp::export(rng = false)]]
 DataFrame boids_simulate_cpp(NumericVector x,
                              NumericVector y,
                              NumericVector z,
@@ -81,7 +82,8 @@ DataFrame boids_simulate_cpp(NumericVector x,
                              double dt,
                              int record_every,
                              int dimension,
-                             bool use_grid) {
+                             bool use_grid,
+                             IntegerVector seed) {
   int n = x.size();
   std::vector<Vec3> pos(n), vel(n);
   for (int i = 0; i < n; ++i) {
@@ -105,6 +107,15 @@ DataFrame boids_simulate_cpp(NumericVector x,
   double noise = param(params, "noise", 0.003);
   double cell = std::max({sep_r, ali_r, coh_r, pred_r, 1e-6});
 
+  std::mt19937 local_rng;
+  if (seed.size() > 0) {
+    local_rng.seed(static_cast<std::mt19937::result_type>(seed[0]));
+  } else {
+    std::random_device device_seed;
+    local_rng.seed(device_seed());
+  }
+  std::normal_distribution<double> local_noise(0.0, noise);  
+  
   std::vector<int> frame_out;
   std::vector<double> time_out, x_out, y_out, z_out, vx_out, vy_out, vz_out, speed_out;
   std::vector<std::string> id_out, species_out;
@@ -180,7 +191,11 @@ DataFrame boids_simulate_cpp(NumericVector x,
         if (dist < r + pred_r && dist > 1e-12) force = add3(force, mul3(normalise3(d), pred_w * strength / std::max(dist, 0.05)));
       }
       if (noise > 0) {
-        force = add3(force, {R::rnorm(0, noise), R::rnorm(0, noise), dimension == 3 ? R::rnorm(0, noise) : 0.0});
+        double nx = local_noise(local_rng);
+        double ny = local_noise(local_rng);
+        double nz = 0.0;
+        if (dimension == 3) nz = local_noise(local_rng);
+        force = add3(force, {nx, ny, nz});
       }
       force = limit3(force, max_force);
       next_vel[i] = limit3(add3(vel[i], force), max_speed);

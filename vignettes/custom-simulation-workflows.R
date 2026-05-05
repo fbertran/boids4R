@@ -1,22 +1,15 @@
-# Custom Simulation Workflows
+## ----include = FALSE----------------------------------------------------------
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
 
-The named scenarios are convenient starting points, but the lower-level
-constructors are intended for custom experiments. This vignette builds a
-2D corridor with a goal, obstacles, and a predator zone, then runs a
-small parameter sweep. It finishes with a 3D mixed-species example.
-
-``` r
+## -----------------------------------------------------------------------------
 library(boids4R)
-```
 
-## Build a corridor experiment
-
-The initial state places two species near the left side of the world.
-Obstacles create a staggered corridor, an attractor pulls the swarm
-toward the lower-right exit, and a predator zone discourages a direct
-high route.
-
-``` r
+## -----------------------------------------------------------------------------
 bounds <- matrix(
   c(-2.4, -1.35, 2.4, 1.35),
   ncol = 2,
@@ -94,15 +87,8 @@ corridor <- simulate_boids(
   record_every = 5,
   seed = 221
 )
-```
 
-## Measure progress and clearance
-
-Because output frames are ordinary data frames, experiment-specific
-metrics can be written directly. Here we measure final progress toward
-the exit, distance from obstacles, and species-level speed.
-
-``` r
+## -----------------------------------------------------------------------------
 final_frame <- function(sim) {
   frames <- as.data.frame(sim)
   frames[frames$frame == max(frames$frame), , drop = FALSE]
@@ -138,8 +124,6 @@ corridor_metrics <- function(sim, label = NULL) {
 }
 
 corridor_metrics(corridor, "baseline")
-#>        run exit_fraction centroid_x mean_speed mean_clearance minimum_clearance
-#> 1 baseline         0.273     -0.356      1.053          0.991             0.152
 
 species_progress <- stats::aggregate(
   cbind(x, speed) ~ species,
@@ -149,18 +133,8 @@ species_progress <- stats::aggregate(
 species_progress$x <- round(species_progress$x, 3)
 species_progress$speed <- round(species_progress$speed, 3)
 species_progress
-#>   species      x speed
-#> 1  school -0.064 1.084
-#> 2   scout -1.229 0.959
-```
 
-## Plot the world and final state
-
-This diagnostic uses only base graphics. Solid circles show obstacles,
-the dashed circle shows the predator influence zone, and the star marks
-the attractor.
-
-``` r
+## -----------------------------------------------------------------------------
 draw_corridor <- function(sim, title = "corridor final state") {
   final <- final_frame(sim)
   world <- sim$world
@@ -202,17 +176,8 @@ draw_corridor <- function(sim, title = "corridor final state") {
 }
 
 draw_corridor(corridor, "baseline corridor")
-```
 
-![](custom-simulation-workflows_files/figure-html/unnamed-chunk-5-1.png)
-
-## Sweep steering weights
-
-The next block compares eight rule-weight combinations. All runs reuse
-the same initial state and world, so differences come from steering
-parameters and simulation noise only.
-
-``` r
+## -----------------------------------------------------------------------------
 sweep <- expand.grid(
   obstacle_weight = c(1.8, 2.5),
   predator_weight = c(2.2, 3.0),
@@ -254,43 +219,12 @@ sweep_metrics <- do.call(rbind, lapply(seq_along(sweep_runs), function(i) {
 }))
 
 sweep_metrics[order(-sweep_metrics$exit_fraction, -sweep_metrics$mean_clearance), ]
-#>   obstacle_weight predator_weight goal_weight   run exit_fraction centroid_x
-#> 5             1.8             2.2        0.20 run-5         0.391      0.241
-#> 7             1.8             3.0        0.20 run-7         0.383      0.240
-#> 8             2.5             3.0        0.20 run-8         0.289     -0.066
-#> 6             2.5             2.2        0.20 run-6         0.289     -0.094
-#> 1             1.8             2.2        0.08 run-1         0.273     -0.417
-#> 3             1.8             3.0        0.08 run-3         0.273     -0.522
-#> 4             2.5             3.0        0.08 run-4         0.211     -0.944
-#> 2             2.5             2.2        0.08 run-2         0.203     -1.059
-#>   mean_speed mean_clearance minimum_clearance
-#> 5      1.116          1.038             0.113
-#> 7      1.095          1.017             0.125
-#> 8      1.086          1.000             0.136
-#> 6      1.072          0.961             0.122
-#> 1      1.136          1.016             0.127
-#> 3      1.087          1.001             0.106
-#> 4      1.122          1.004             0.119
-#> 2      1.142          1.058             0.206
-```
 
-The best setting by exit fraction is easy to inspect as another
-simulation object.
-
-``` r
+## ----sweep-best-plot, fig.width = 7, fig.height = 4.8-------------------------
 best <- which.max(sweep_metrics$exit_fraction)
 draw_corridor(sweep_runs[[best]], paste("best sweep run", best))
-```
 
-![](custom-simulation-workflows_files/figure-html/sweep-best-plot-1.png)
-
-## Add a 3D mixed-species run
-
-The same workflow extends to 3D. The built-in mixed-species scenario
-includes a predator influence zone, multiple species labels, and full 3D
-positions.
-
-``` r
+## -----------------------------------------------------------------------------
 mixed_3d <- boids_scenario(
   "mixed_species_3d",
   n = 180,
@@ -305,13 +239,8 @@ stats::aggregate(
   mixed_final,
   function(x) round(mean(x), 3)
 )
-#>   species speed      z
-#> 1    kite 1.190 -0.196
-#> 2   swift 1.223 -0.006
-#> 3    tern 1.223 -0.092
-```
 
-``` r
+## ----mixed-3d-projection, fig.width = 7, fig.height = 4.8---------------------
 palette_3d <- stats::setNames(
   grDevices::hcl.colors(length(unique(mixed_final$species)), "Dark 3"),
   sort(unique(mixed_final$species))
@@ -332,16 +261,13 @@ graphics::plot(
   cex = cex_3d
 )
 graphics::legend("topright", legend = names(palette_3d), col = palette_3d, pch = 16, bty = "n")
-```
 
-![](custom-simulation-workflows_files/figure-html/mixed-3d-projection-1.png)
+## ----eval = FALSE-------------------------------------------------------------
+# if (requireNamespace("ggWebGL", quietly = TRUE) &&
+#     utils::packageVersion("ggWebGL") >= "0.4.0") {
+#   ggWebGL::ggWebGL(
+#     as_ggwebgl_spec(mixed_3d, vector_every = 15),
+#     height = 540
+#   )
+# }
 
-``` r
-if (requireNamespace("ggWebGL", quietly = TRUE) &&
-    utils::packageVersion("ggWebGL") >= "0.4.0") {
-  ggWebGL::ggWebGL(
-    as_ggwebgl_spec(mixed_3d, vector_every = 15),
-    height = 540
-  )
-}
-```

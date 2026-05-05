@@ -5,7 +5,10 @@
 #' @param bounds Optional bounds used for random initialization.
 #' @param positions,velocities Optional numeric matrices or data frames.
 #' @param species Species labels, recycled to `n`.
-#' @param seed Optional seed for reproducible initialization.
+#' @param seed Optional integer seed for reproducible initialization. When
+#'   supplied, a package-local generator is used and the global R random-number
+#'   state is not modified.
+#' @param .rng Internal package-local random-number generator.
 #' @return A `boids_state` data frame.
 #' @examples
 #' bounds <- matrix(
@@ -26,14 +29,15 @@ boids_state <- function(n,
                         positions = NULL,
                         velocities = NULL,
                         species = "boid",
-                        seed = NULL) {
+                        seed = NULL,
+                        .rng = NULL) {
   dimension <- match.arg(dimension)
   n <- as.integer(n)[[1L]]
   if (!is.finite(n) || n <= 0L) stop("`n` must be a positive integer.", call. = FALSE)
-  if (!is.null(seed)) set.seed(seed)
+  rng <- .rng %||% make_boids_rng(seed)
   bounds <- normalise_bounds(bounds, dimension)
-  pos <- normalise_state_matrix(positions, n, dimension, bounds, velocity = FALSE)
-  vel <- normalise_state_matrix(velocities, n, dimension, bounds, velocity = TRUE)
+  pos <- normalise_state_matrix(positions, n, dimension, bounds, velocity = FALSE, rng = rng)
+  vel <- normalise_state_matrix(velocities, n, dimension, bounds, velocity = TRUE, rng = rng)
   species <- rep(as.character(species), length.out = n)
   out <- data.frame(
     id = sprintf("boid-%05d", seq_len(n)),
@@ -68,17 +72,17 @@ normalise_state <- function(state) {
   state
 }
 
-normalise_state_matrix <- function(x, n, dimension, bounds, velocity) {
+normalise_state_matrix <- function(x, n, dimension, bounds, velocity, rng = NULL) {
   if (is.null(x)) {
     if (isTRUE(velocity)) {
-      mat <- matrix(stats::rnorm(n * 3L, 0, 0.25), ncol = 3L)
+      mat <- matrix(boids_rnorm(n * 3L, 0, 0.25, rng = rng), ncol = 3L)
       if (identical(dimension, "2d")) mat[, 3L] <- 0
       return(mat)
     }
     mat <- cbind(
-      stats::runif(n, bounds["x", "min"], bounds["x", "max"]),
-      stats::runif(n, bounds["y", "min"], bounds["y", "max"]),
-      if (identical(dimension, "3d")) stats::runif(n, bounds["z", "min"], bounds["z", "max"]) else rep(0, n)
+      boids_runif(n, bounds["x", "min"], bounds["x", "max"], rng = rng),
+      boids_runif(n, bounds["y", "min"], bounds["y", "max"], rng = rng),
+      if (identical(dimension, "3d")) boids_runif(n, bounds["z", "min"], bounds["z", "max"], rng = rng) else rep(0, n)
     )
     return(mat)
   }
@@ -89,4 +93,49 @@ normalise_state_matrix <- function(x, n, dimension, bounds, velocity) {
   storage.mode(x) <- "double"
   if (identical(dimension, "2d")) x[, 3L] <- 0
   x
+}
+
+
+make_boids_rng <- function(seed = NULL) {
+  if (is.null(seed)) return(NULL)
+  seed <- as.integer(seed)[[1L]]
+  if (!is.finite(seed)) stop("`seed` must be a finite integer.", call. = FALSE)
+  
+  rng <- new.env(parent = emptyenv())
+  rng$modulus <- 2147483647
+  rng$multiplier <- 16807
+  rng$state <- as.double(seed %% rng$modulus)
+  if (rng$state <= 0) rng$state <- rng$state + rng$modulus - 1
+  
+  rng$runif01 <- function(n) {
+    n <- as.integer(n)[[1L]]
+    if (!is.finite(n) || n < 0L) stop("`n` must be a non-negative integer.", call. = FALSE)
+    out <- numeric(n)
+    if (n == 0L) return(out)
+    for (i in seq_len(n)) {
+      rng$state <- (rng$multiplier * rng$state) %% rng$modulus
+      out[i] <- rng$state / rng$modulus
+    }
+    out
+  }
+  
+  rng
+}
+
+boids_runif <- function(n, min = 0, max = 1, rng = NULL) {
+  if (is.null(rng)) return(stats::runif(n, min, max))
+  min + (max - min) * rng$runif01(n)
+}
+
+boids_rnorm <- function(n, mean = 0, sd = 1, rng = NULL) {
+  if (is.null(rng)) return(stats::rnorm(n, mean, sd))
+  n <- as.integer(n)[[1L]]
+  if (!is.finite(n) || n < 0L) stop("`n` must be a non-negative integer.", call. = FALSE)
+  if (n == 0L) return(numeric())
+  m <- ceiling(n / 2)
+  u1 <- pmax(rng$runif01(m), .Machine$double.eps)
+  u2 <- rng$runif01(m)
+  z1 <- sqrt(-2 * log(u1)) * cos(2 * pi * u2)
+  z2 <- sqrt(-2 * log(u1)) * sin(2 * pi * u2)
+  mean + sd * c(rbind(z1, z2))[seq_len(n)]
 }

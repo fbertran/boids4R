@@ -32,8 +32,6 @@ create a staggered corridor, an attractor pulls the swarm toward the lower-right
 exit, and a predator zone discourages a direct high route.
 
 ```{r}
-set.seed(220)
-
 bounds <- matrix(
   c(-2.4, -1.35, 2.4, 1.35),
   ncol = 2,
@@ -44,13 +42,19 @@ n_school <- 96L
 n_scout <- 32L
 n_boids <- n_school + n_scout
 
+school_i <- seq_len(n_school)
+scout_i <- seq_len(n_scout)
+boid_i <- seq_len(n_boids)
+
 positions <- rbind(
-  cbind(stats::runif(n_school, -2.18, -1.35), stats::runif(n_school, -0.7, 0.25)),
-  cbind(stats::runif(n_scout, -2.22, -1.45), stats::runif(n_scout, 0.28, 0.92))
+  cbind(seq(-2.18, -1.35, length.out = n_school),
+       -0.25 + 0.42 * sin(0.19 * school_i)),
+  cbind(seq(-2.22, -1.45, length.out = n_scout),
+        0.60 + 0.28 * sin(0.31 * scout_i))
 )
 velocities <- cbind(
-  stats::runif(n_boids, 0.15, 0.55),
-  stats::rnorm(n_boids, 0, 0.08)
+  0.35 + 0.20 * sin(0.13 * boid_i),
+  0.08 * cos(0.17 * boid_i)
 )
 
 state <- boids_state(

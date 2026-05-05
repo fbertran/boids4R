@@ -3,7 +3,9 @@
 #' @param name Scenario name.
 #' @param n Number of boids.
 #' @param dimension Scenario dimension. Some scenario names imply a dimension.
-#' @param seed Optional seed.
+#' @param seed Optional integer seed for reproducible scenario initialization
+#'   and simulation noise. When supplied, the global R random-number state is
+#'   not modified.
 #' @param steps Number of simulation steps.
 #' @param record_every Record every `record_every` steps.
 #' @return A `boids_simulation` object.
@@ -29,7 +31,7 @@ boids_scenario <- function(name = c("murmuration_3d", "predator_avoidance_2d", "
                            record_every = 2L) {
   name <- match.arg(name)
   dimension <- if (grepl("_3d$", name)) "3d" else if (grepl("_2d$", name)) "2d" else match.arg(dimension)
-  if (!is.null(seed)) set.seed(seed)
+  rng <- make_boids_rng(seed)
   bounds <- if (identical(dimension, "3d")) {
     matrix(c(-2.2, -1.5, -1.2, 2.2, 1.5, 1.2), ncol = 2L, dimnames = list(c("x", "y", "z"), c("min", "max")))
   } else {
@@ -72,12 +74,13 @@ boids_scenario <- function(name = c("murmuration_3d", "predator_avoidance_2d", "
   )
 
   positions <- if (identical(name, "obstacle_corridor_2d")) {
-    sample_positions_outside_obstacles(n, dimension, bounds, world$obstacles, buffer = 0.08)
+    sample_positions_outside_obstacles(n, dimension, bounds, world$obstacles, buffer = 0.08, rng = rng)
   } else {
     NULL
   }
 
-  state <- boids_state(n, dimension = dimension, bounds = bounds, positions = positions, species = species, seed = seed)
+  state <- boids_state(n, dimension = dimension, bounds = bounds, positions = positions, species = species, .rng = rng)
+  attr(state, "scenario") <- name
   attr(state, "scenario") <- name
 
   params <- switch(name,
@@ -91,7 +94,7 @@ boids_scenario <- function(name = c("murmuration_3d", "predator_avoidance_2d", "
   simulate_boids(state, world, params, steps = steps, record_every = record_every, seed = seed)
 }
 
-sample_positions_outside_obstacles <- function(n, dimension, bounds, obstacles, buffer = 0) {
+sample_positions_outside_obstacles <- function(n, dimension, bounds, obstacles, buffer = 0, rng = NULL) {
   if (is.null(obstacles) || !nrow(obstacles)) return(NULL)
 
   dims <- if (identical(dimension, "3d")) c("x", "y", "z") else c("x", "y")
@@ -103,11 +106,11 @@ sample_positions_outside_obstacles <- function(n, dimension, bounds, obstacles, 
     attempts <- attempts + 1L
     batch <- max(50L, (n - filled) * 4L)
     candidates <- cbind(
-      x = stats::runif(batch, bounds["x", "min"], bounds["x", "max"]),
-      y = stats::runif(batch, bounds["y", "min"], bounds["y", "max"])
+      x = boids_runif(batch, bounds["x", "min"], bounds["x", "max"], rng = rng),
+      y = boids_runif(batch, bounds["y", "min"], bounds["y", "max"], rng = rng)
     )
     if (identical(dimension, "3d")) {
-      candidates <- cbind(candidates, z = stats::runif(batch, bounds["z", "min"], bounds["z", "max"]))
+      candidates <- cbind(candidates, z = boids_runif(batch, bounds["z", "min"], bounds["z", "max"], rng = rng))
     }
 
     keep <- rep(TRUE, batch)

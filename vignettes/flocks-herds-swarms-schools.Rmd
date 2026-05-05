@@ -148,16 +148,16 @@ herd_bounds <- matrix(
   ncol = 2,
   dimnames = list(c("x", "y", "z"), c("min", "max"))
 )
-set.seed(505)
+herd_i <- seq_len(150)
 herd_positions <- cbind(
-  stats::runif(150, -2.15, -1.25),
-  stats::runif(150, -0.55, 0.65),
-  stats::rnorm(150, 0, 0.015)
+  seq(-2.15, -1.25, length.out = 150),
+  0.55 * sin(0.23 * herd_i),
+  0.015 * cos(0.17 * herd_i)
 )
 herd_velocities <- cbind(
-  stats::runif(150, 0.10, 0.42),
-  stats::rnorm(150, 0, 0.08),
-  stats::rnorm(150, 0, 0.005)
+  0.26 + 0.16 * sin(0.11 * herd_i),
+  0.08 * cos(0.19 * herd_i),
+  0.005 * sin(0.29 * herd_i)
 )
 herd_3d <- simulate_boids(
   boids_state(

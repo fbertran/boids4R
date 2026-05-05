@@ -32,7 +32,9 @@ boids_scenario(
 
 - seed:
 
-  Optional seed.
+  Optional integer seed for reproducible scenario initialization and
+  simulation noise. When supplied, the global R random-number state is
+  not modified.
 
 - steps:
 
@@ -64,5 +66,5 @@ table(frames$frame)
 
 sim3d <- boids_scenario("murmuration_3d", n = 15, steps = 3, seed = 4)
 range(as.data.frame(sim3d)$z)
-#> [1] -1.198859  1.130472
+#> [1] -1.186552  1.175857
 ```

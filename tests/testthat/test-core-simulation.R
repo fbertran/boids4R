@@ -2,7 +2,7 @@ test_that("constructors produce renderer-neutral state", {
   params <- boids_params("3d")
   world <- boids_world("3d")
   state <- boids_state(12, "3d", seed = 1)
-
+  
   expect_s3_class(params, "boids_params")
   expect_s3_class(world, "boids_world")
   expect_s3_class(state, "boids_state")
@@ -17,7 +17,7 @@ test_that("simulation returns expected columns and finite bounded values", {
   world <- boids_world("2d", boundary = "reflect")
   sim <- simulate_boids(state, world, boids_params("2d", max_speed = 0.8), steps = 8, seed = 3)
   frames <- as.data.frame(sim)
-
+  
   expect_s3_class(sim, "boids_simulation")
   expect_true(all(c("frame", "time", "id", "species", "x", "y", "z", "vx", "vy", "vz", "speed") %in% names(frames)))
   expect_true(all(is.finite(frames$x)))
@@ -29,6 +29,29 @@ test_that("simulation is reproducible with a fixed seed", {
   state <- boids_state(20, "2d", seed = 4)
   sim1 <- simulate_boids(state, steps = 6, seed = 99)
   sim2 <- simulate_boids(state, steps = 6, seed = 99)
+  expect_equal(as.data.frame(sim1), as.data.frame(sim2), tolerance = 1e-12)
+})
+
+test_that("seeded state construction does not modify the global RNG state", {
+  had_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  old_seed <- if (had_seed) get(".Random.seed", envir = .GlobalEnv, inherits = FALSE) else NULL
+  
+  state1 <- boids_state(8, "2d", seed = 123)
+  state2 <- boids_state(8, "2d", seed = 123)
+  expect_equal(state1, state2)
+  
+  if (had_seed) {
+    expect_identical(get(".Random.seed", envir = .GlobalEnv, inherits = FALSE), old_seed)
+  } else {
+    expect_false(exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
+  }
+})
+
+test_that("seeded simulation noise is reproducible without R-level set.seed", {
+  state <- boids_state(12, "2d", seed = 11)
+  params <- boids_params("2d", noise = 0.01)
+  sim1 <- simulate_boids(state, params = params, steps = 5, seed = 101)
+  sim2 <- simulate_boids(state, params = params, steps = 5, seed = 101)
   expect_equal(as.data.frame(sim1), as.data.frame(sim2), tolerance = 1e-12)
 })
 
@@ -55,7 +78,7 @@ test_that("obstacle corridor scenario does not initialize boids inside obstacles
   initial <- as.data.frame(sim)
   initial <- initial[initial$frame == 0L, , drop = FALSE]
   obstacles <- sim$world$obstacles
-
+  
   for (i in seq_len(nrow(obstacles))) {
     distance <- sqrt(
       (initial$x - obstacles$x[i])^2 +
@@ -87,7 +110,7 @@ test_that("optional ggWebGL adapter emits timeline and 3d view metadata", {
     utils::packageVersion("ggWebGL") < "0.4.0",
     "ggWebGL >= 0.4.0 is required for the boids4R adapter"
   )
-
+  
   sim <- boids_scenario("murmuration_3d", n = 20, steps = 4, seed = 9)
   spec <- as_ggwebgl_spec(sim, vector_every = 4)
   expect_equal(spec$render$timeline$filter, "exact")

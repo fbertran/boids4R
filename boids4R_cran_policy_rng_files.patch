@@ -1,0 +1,404 @@
+diff --git a/R/state.R b/R/state.R
+index 184355e..9b7cafe 100644
+--- a/R/state.R
++++ b/R/state.R
+@@ -5,7 +5,9 @@
+ #' @param bounds Optional bounds used for random initialization.
+ #' @param positions,velocities Optional numeric matrices or data frames.
+ #' @param species Species labels, recycled to `n`.
+-#' @param seed Optional seed for reproducible initialization.
++#' @param seed Optional integer seed for reproducible initialization. When
++#'   supplied, a package-local generator is used and the global R random-number
++#'   state is not modified.
+ #' @return A `boids_state` data frame.
+ #' @examples
+ #' bounds <- matrix(
+@@ -31,12 +33,12 @@ boids_state <- function(n,
+   dimension <- match.arg(dimension)
+   n <- as.integer(n)[[1L]]
+   if (!is.finite(n) || n <= 0L) stop("`n` must be a positive integer.", call. = FALSE)
+-  if (!is.null(seed)) set.seed(seed)
++  rng <- make_boids_rng(seed)
+   bounds <- normalise_bounds(bounds, dimension)
+-  pos <- normalise_state_matrix(positions, n, dimension, bounds, velocity = FALSE)
+-  vel <- normalise_state_matrix(velocities, n, dimension, bounds, velocity = TRUE)
++  pos <- normalise_state_matrix(positions, n, dimension, bounds, velocity = FALSE, rng = rng)
++  vel <- normalise_state_matrix(velocities, n, dimension, bounds, velocity = TRUE, rng = rng)
+   species <- rep(as.character(species), length.out = n)
+   out <- data.frame(
+     id = sprintf("boid-%05d", seq_len(n)),
+@@ -75,19 +77,19 @@ normalise_state <- function(state) {
+   state
+ }
+
+-normalise_state_matrix <- function(x, n, dimension, bounds, velocity) {
++normalise_state_matrix <- function(x, n, dimension, bounds, velocity, rng = NULL) {
+   if (is.null(x)) {
+     if (isTRUE(velocity)) {
+-      mat <- matrix(stats::rnorm(n * 3L, 0, 0.25), ncol = 3L)
++      mat <- matrix(boids_rnorm(n * 3L, 0, 0.25, rng = rng), ncol = 3L)
+       if (identical(dimension, "2d")) mat[, 3L] <- 0
+       return(mat)
+     }
+     mat <- cbind(
+-      stats::runif(n, bounds["x", "min"], bounds["x", "max"]),
+-      stats::runif(n, bounds["y", "min"], bounds["y", "max"]),
+-      if (identical(dimension, "3d")) stats::runif(n, bounds["z", "min"], bounds["z", "max"]) else rep(0, n)
++      boids_runif(n, bounds["x", "min"], bounds["x", "max"], rng = rng),
++      boids_runif(n, bounds["y", "min"], bounds["y", "max"], rng = rng),
++      if (identical(dimension, "3d")) boids_runif(n, bounds["z", "min"], bounds["z", "max"], rng = rng) else rep(0, n)
+     )
+     return(mat)
+   }
+@@ -99,3 +101,45 @@ normalise_state_matrix <- function(x, n, dimension, bounds, velocity) {
+   if (identical(dimension, "2d")) x[, 3L] <- 0
+   x
+ }
++
++make_boids_rng <- function(seed = NULL) {
++  if (is.null(seed)) return(NULL)
++  seed <- as.integer(seed)[[1L]]
++  if (!is.finite(seed)) stop("`seed` must be a finite integer.", call. = FALSE)
++
++  rng <- new.env(parent = emptyenv())
++  rng$modulus <- 2147483647
++  rng$multiplier <- 16807
++  rng$state <- as.double(seed %% rng$modulus)
++  if (rng$state <= 0) rng$state <- rng$state + rng$modulus - 1
++
++  rng$runif01 <- function(n) {
++    n <- as.integer(n)[[1L]]
++    if (!is.finite(n) || n < 0L) stop("`n` must be a non-negative integer.", call. = FALSE)
++    out <- numeric(n)
++    if (n == 0L) return(out)
++    for (i in seq_len(n)) {
++      rng$state <- (rng$multiplier * rng$state) %% rng$modulus
++      out[i] <- rng$state / rng$modulus
++    }
++    out
++  }
++
++  rng
++}
++
++boids_runif <- function(n, min = 0, max = 1, rng = NULL) {
++  if (is.null(rng)) return(stats::runif(n, min, max))
++  min + (max - min) * rng$runif01(n)
++}
++
++boids_rnorm <- function(n, mean = 0, sd = 1, rng = NULL) {
++  if (is.null(rng)) return(stats::rnorm(n, mean, sd))
++  n <- as.integer(n)[[1L]]
++  if (!is.finite(n) || n < 0L) stop("`n` must be a non-negative integer.", call. = FALSE)
++  if (n == 0L) return(numeric())
++  m <- ceiling(n / 2)
++  u1 <- pmax(rng$runif01(m), .Machine$double.eps)
++  u2 <- rng$runif01(m)
++  z1 <- sqrt(-2 * log(u1)) * cos(2 * pi * u2)
++  z2 <- sqrt(-2 * log(u1)) * sin(2 * pi * u2)
++  mean + sd * c(rbind(z1, z2))[seq_len(n)]
++}
+diff --git a/R/simulate.R b/R/simulate.R
+index e11a96c..b2c1234 100644
+--- a/R/simulate.R
++++ b/R/simulate.R
+@@ -6,7 +6,8 @@
+ #' @param dt Time-step size.
+ #' @param record_every Record every `record_every` steps.
+ #' @param engine Simulation engine. `rcpp_grid` and `rcpp_naive` are available.
+-#' @param seed Optional seed for deterministic noise.
++#' @param seed Optional integer seed for deterministic simulation noise. When
++#'   supplied, the global R random-number state is not modified.
+ #' @return A `boids_simulation` object.
+ #' @examples
+ #' state <- boids_state(12, "2d", seed = 1)
+@@ -46,7 +47,8 @@ simulate_boids <- function(state,
+   dt <- positive_number(dt, "dt")
+   if (!is.finite(steps) || steps < 0L) stop("`steps` must be a non-negative integer.", call. = FALSE)
+   if (!is.finite(record_every) || record_every <= 0L) stop("`record_every` must be a positive integer.", call. = FALSE)
+-  if (!is.null(seed)) set.seed(seed)
++  seed <- validate_boids_seed(seed)
++  cpp_seed <- if (is.null(seed)) integer() else seed
+
+   sim <- boids_simulate_cpp(
+     x = state$x,
+@@ -70,7 +72,8 @@ simulate_boids <- function(state,
+     record_every = record_every,
+     dimension = if (identical(dimension, "3d")) 3L else 2L,
+-    use_grid = identical(engine, "rcpp_grid")
++    use_grid = identical(engine, "rcpp_grid"),
++    seed = cpp_seed
+   )
+
+   out <- list(
+@@ -101,3 +104,10 @@ as_numeric_matrix <- function(x, cols) {
+   storage.mode(mat) <- "double"
+   mat
+ }
++
++validate_boids_seed <- function(seed) {
++  if (is.null(seed)) return(NULL)
++  seed <- as.integer(seed)[[1L]]
++  if (!is.finite(seed)) stop("`seed` must be a finite integer.", call. = FALSE)
++  seed
++}
+diff --git a/R/scenario.R b/R/scenario.R
+index 9120d84..8c0d111 100644
+--- a/R/scenario.R
++++ b/R/scenario.R
+@@ -3,7 +3,9 @@
+ #' @param name Scenario name.
+ #' @param n Number of boids.
+ #' @param dimension Scenario dimension. Some scenario names imply a dimension.
+-#' @param seed Optional seed.
++#' @param seed Optional integer seed for reproducible scenario initialization
++#'   and simulation noise. When supplied, the global R random-number state is
++#'   not modified.
+ #' @param steps Number of simulation steps.
+ #' @param record_every Record every `record_every` steps.
+ #' @return A `boids_simulation` object.
+@@ -27,7 +29,7 @@ boids_scenario <- function(name = c("murmuration_3d", "predator_avoidance_2d",
+                            record_every = 2L) {
+   name <- match.arg(name)
+   dimension <- if (grepl("_3d$", name)) "3d" else if (grepl("_2d$", name)) "2d" else match.arg(dimension)
+-  if (!is.null(seed)) set.seed(seed)
++  rng <- make_boids_rng(seed)
+   bounds <- if (identical(dimension, "3d")) {
+     matrix(c(-2.2, -1.5, -1.2, 2.2, 1.5, 1.2), ncol = 2L, dimnames = list(c("x", "y", "z"), c("min", "max")))
+   } else {
+@@ -74,12 +76,12 @@ boids_scenario <- function(name = c("murmuration_3d", "predator_avoidance_2d",
+
+   positions <- if (identical(name, "obstacle_corridor_2d")) {
+-    sample_positions_outside_obstacles(n, dimension, bounds, world$obstacles, buffer = 0.08)
++    sample_positions_outside_obstacles(n, dimension, bounds, world$obstacles, buffer = 0.08, rng = rng)
+   } else {
+     NULL
+   }
+
+-  state <- boids_state(n, dimension = dimension, bounds = bounds, positions = positions, species = species, seed = seed)
++  state <- boids_state(n, dimension = dimension, bounds = bounds, positions = positions, species = species, .rng = rng)
+   attr(state, "scenario") <- name
+
+   params <- switch(name,
+@@ -96,7 +98,7 @@ boids_scenario <- function(name = c("murmuration_3d", "predator_avoidance_2d",
+   simulate_boids(state, world, params, steps = steps, record_every = record_every, seed = seed)
+ }
+
+-sample_positions_outside_obstacles <- function(n, dimension, bounds, obstacles, buffer = 0) {
++sample_positions_outside_obstacles <- function(n, dimension, bounds, obstacles, buffer = 0, rng = NULL) {
+   if (is.null(obstacles) || !nrow(obstacles)) return(NULL)
+
+   dims <- if (identical(dimension, "3d")) c("x", "y", "z") else c("x", "y")
+@@ -110,11 +112,11 @@ sample_positions_outside_obstacles <- function(n, dimension, bounds, obstacles,
+     attempts <- attempts + 1L
+     batch <- max(50L, (n - filled) * 4L)
+     candidates <- cbind(
+-      x = stats::runif(batch, bounds["x", "min"], bounds["x", "max"]),
+-      y = stats::runif(batch, bounds["y", "min"], bounds["y", "max"])
++      x = boids_runif(batch, bounds["x", "min"], bounds["x", "max"], rng = rng),
++      y = boids_runif(batch, bounds["y", "min"], bounds["y", "max"], rng = rng)
+     )
+     if (identical(dimension, "3d")) {
+-      candidates <- cbind(candidates, z = stats::runif(batch, bounds["z", "min"], bounds["z", "max"]))
++      candidates <- cbind(candidates, z = boids_runif(batch, bounds["z", "min"], bounds["z", "max"], rng = rng))
+     }
+
+     keep <- rep(TRUE, batch)
+diff --git a/R/RcppExports.R b/R/RcppExports.R
+index 5b47cf4..3f0caaa 100644
+--- a/R/RcppExports.R
++++ b/R/RcppExports.R
+@@ -2,8 +2,8 @@
+ # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
+
+-boids_simulate_cpp <- function(x, y, z, vx, vy, vz, ids, species, bounds, boundary, obstacles, attractors, predators, params, steps, dt, record_every, dimension, use_grid) {
+-    .Call(`_boids4R_boids_simulate_cpp`, x, y, z, vx, vy, vz, ids, species, bounds, boundary, obstacles, attractors, predators, params, steps, dt, record_every, dimension, use_grid)
++boids_simulate_cpp <- function(x, y, z, vx, vy, vz, ids, species, bounds, boundary, obstacles, attractors, predators, params, steps, dt, record_every, dimension, use_grid, seed) {
++    .Call(`_boids4R_boids_simulate_cpp`, x, y, z, vx, vy, vz, ids, species, bounds, boundary, obstacles, attractors, predators, params, steps, dt, record_every, dimension, use_grid, seed)
+ }
+
+diff --git a/src/boids.cpp b/src/boids.cpp
+index 1fbe7e1..2adbeef 100644
+--- a/src/boids.cpp
++++ b/src/boids.cpp
+@@ -2,6 +2,7 @@
+ #include <algorithm>
+ #include <cmath>
++#include <random>
+ #include <string>
+ #include <unordered_map>
+ #include <vector>
+@@ -89,7 +90,8 @@ DataFrame boids_simulate_cpp(NumericVector x,
+                              double dt,
+                              int record_every,
+                              int dimension,
+-                             bool use_grid) {
++                             bool use_grid,
++                             IntegerVector seed) {
+   int n = x.size();
+   std::vector<Vec3> pos(n), vel(n);
+   for (int i = 0; i < n; ++i) {
+@@ -114,6 +116,14 @@ DataFrame boids_simulate_cpp(NumericVector x,
+   double noise = param(params, "noise", 0.003);
+   double cell = std::max({sep_r, ali_r, coh_r, pred_r, 1e-6});
+
++  bool use_local_rng = seed.size() > 0;
++  std::mt19937 local_rng;
++  if (use_local_rng) {
++    local_rng.seed(static_cast<std::mt19937::result_type>(seed[0]));
++  }
++  std::normal_distribution<double> local_noise(0.0, noise);
++
+   std::vector<int> frame_out;
+   std::vector<double> time_out, x_out, y_out, z_out, vx_out, vy_out, vz_out, speed_out;
+   std::vector<std::string> id_out, species_out;
+@@ -222,7 +232,20 @@ DataFrame boids_simulate_cpp(NumericVector x,
+       }
+       if (noise > 0) {
+-        force = add3(force, {R::rnorm(0, noise), R::rnorm(0, noise), dimension == 3 ? R::rnorm(0, noise) : 0.0});
++        double nx = 0.0;
++        double ny = 0.0;
++        double nz = 0.0;
++        if (use_local_rng) {
++          nx = local_noise(local_rng);
++          ny = local_noise(local_rng);
++          if (dimension == 3) nz = local_noise(local_rng);
++        } else {
++          nx = R::rnorm(0, noise);
++          ny = R::rnorm(0, noise);
++          if (dimension == 3) nz = R::rnorm(0, noise);
++        }
++        force = add3(force, {nx, ny, nz});
+       }
+       force = limit3(force, max_force);
+       next_vel[i] = limit3(add3(vel[i], force), max_speed);
+diff --git a/src/RcppExports.cpp b/src/RcppExports.cpp
+index 947f3e4..4e5cafe 100644
+--- a/src/RcppExports.cpp
++++ b/src/RcppExports.cpp
+@@ -11,8 +11,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+ #endif
+
+ // boids_simulate_cpp
+-DataFrame boids_simulate_cpp(NumericVector x, NumericVector y, NumericVector z, NumericVector vx, NumericVector vy, NumericVector vz, CharacterVector ids, CharacterVector species, NumericMatrix bounds, std::string boundary, NumericMatrix obstacles, NumericMatrix attractors, NumericMatrix predators, NumericVector params, int steps, double dt, int record_every, int dimension, bool use_grid);
+-RcppExport SEXP _boids4R_boids_simulate_cpp(SEXP xSEXP, SEXP ySEXP, SEXP zSEXP, SEXP vxSEXP, SEXP vySEXP, SEXP vzSEXP, SEXP idsSEXP, SEXP speciesSEXP, SEXP boundsSEXP, SEXP boundarySEXP, SEXP obstaclesSEXP, SEXP attractorsSEXP, SEXP predatorsSEXP, SEXP paramsSEXP, SEXP stepsSEXP, SEXP dtSEXP, SEXP record_everySEXP, SEXP dimensionSEXP, SEXP use_gridSEXP) {
++DataFrame boids_simulate_cpp(NumericVector x, NumericVector y, NumericVector z, NumericVector vx, NumericVector vy, NumericVector vz, CharacterVector ids, CharacterVector species, NumericMatrix bounds, std::string boundary, NumericMatrix obstacles, NumericMatrix attractors, NumericMatrix predators, NumericVector params, int steps, double dt, int record_every, int dimension, bool use_grid, IntegerVector seed);
++RcppExport SEXP _boids4R_boids_simulate_cpp(SEXP xSEXP, SEXP ySEXP, SEXP zSEXP, SEXP vxSEXP, SEXP vySEXP, SEXP vzSEXP, SEXP idsSEXP, SEXP speciesSEXP, SEXP boundsSEXP, SEXP boundarySEXP, SEXP obstaclesSEXP, SEXP attractorsSEXP, SEXP predatorsSEXP, SEXP paramsSEXP, SEXP stepsSEXP, SEXP dtSEXP, SEXP record_everySEXP, SEXP dimensionSEXP, SEXP use_gridSEXP, SEXP seedSEXP) {
+ BEGIN_RCPP
+     Rcpp::RObject rcpp_result_gen;
+     Rcpp::RNGScope rcpp_rngScope_gen;
+@@ -36,12 +36,13 @@ BEGIN_RCPP
+     Rcpp::traits::input_parameter< int >::type record_every(record_everySEXP);
+     Rcpp::traits::input_parameter< int >::type dimension(dimensionSEXP);
+     Rcpp::traits::input_parameter< bool >::type use_grid(use_gridSEXP);
+-    rcpp_result_gen = Rcpp::wrap(boids_simulate_cpp(x, y, z, vx, vy, vz, ids, species, bounds, boundary, obstacles, attractors, predators, params, steps, dt, record_every, dimension, use_grid));
++    Rcpp::traits::input_parameter< IntegerVector >::type seed(seedSEXP);
++    rcpp_result_gen = Rcpp::wrap(boids_simulate_cpp(x, y, z, vx, vy, vz, ids, species, bounds, boundary, obstacles, attractors, predators, params, steps, dt, record_every, dimension, use_grid, seed));
+     return rcpp_result_gen;
+ END_RCPP
+ }
+
+ static const R_CallMethodDef CallEntries[] = {
+-    {"_boids4R_boids_simulate_cpp", (DL_FUNC) &_boids4R_boids_simulate_cpp, 19},
++    {"_boids4R_boids_simulate_cpp", (DL_FUNC) &_boids4R_boids_simulate_cpp, 20},
+     {NULL, NULL, 0}
+ };
+diff --git a/vignettes/custom-simulation-workflows.Rmd b/vignettes/custom-simulation-workflows.Rmd
+index 358d1ca..a111111 100644
+--- a/vignettes/custom-simulation-workflows.Rmd
++++ b/vignettes/custom-simulation-workflows.Rmd
+@@ -26,8 +26,6 @@ create a staggered corridor, an attractor pulls the swarm toward the lower-right
+ exit, and a predator zone discourages a direct high route.
+
+ ```{r}
+-set.seed(220)
+-
+ bounds <- matrix(
+   c(-2.4, -1.35, 2.4, 1.35),
+   ncol = 2,
+@@ -39,15 +37,21 @@ n_school <- 96L
+ n_scout <- 32L
+ n_boids <- n_school + n_scout
+
++school_i <- seq_len(n_school)
++scout_i <- seq_len(n_scout)
++boid_i <- seq_len(n_boids)
++
+ positions <- rbind(
+-  cbind(stats::runif(n_school, -2.18, -1.35), stats::runif(n_school, -0.7, 0.25)),
+-  cbind(stats::runif(n_scout, -2.22, -1.45), stats::runif(n_scout, 0.28, 0.92))
++  cbind(seq(-2.18, -1.35, length.out = n_school),
++        -0.25 + 0.42 * sin(0.19 * school_i)),
++  cbind(seq(-2.22, -1.45, length.out = n_scout),
++        0.60 + 0.28 * sin(0.31 * scout_i))
+ )
+ velocities <- cbind(
+-  stats::runif(n_boids, 0.15, 0.55),
+-  stats::rnorm(n_boids, 0, 0.08)
++  0.35 + 0.20 * sin(0.13 * boid_i),
++  0.08 * cos(0.17 * boid_i)
+ )
+
+ state <- boids_state(
+diff --git a/vignettes/flocks-herds-swarms-schools.Rmd b/vignettes/flocks-herds-swarms-schools.Rmd
+index 14ecee3..b222222 100644
+--- a/vignettes/flocks-herds-swarms-schools.Rmd
++++ b/vignettes/flocks-herds-swarms-schools.Rmd
+@@ -138,16 +138,17 @@ herd_bounds <- matrix(
+   ncol = 2,
+   dimnames = list(c("x", "y", "z"), c("min", "max"))
+ )
+-set.seed(505)
++herd_i <- seq_len(150)
+ herd_positions <- cbind(
+-  stats::runif(150, -2.15, -1.25),
+-  stats::runif(150, -0.55, 0.65),
+-  stats::rnorm(150, 0, 0.015)
++  seq(-2.15, -1.25, length.out = 150),
++  0.55 * sin(0.23 * herd_i),
++  0.015 * cos(0.17 * herd_i)
+ )
+ herd_velocities <- cbind(
+-  stats::runif(150, 0.10, 0.42),
+-  stats::rnorm(150, 0, 0.08),
+-  stats::rnorm(150, 0, 0.005)
++  0.26 + 0.16 * sin(0.11 * herd_i),
++  0.08 * cos(0.19 * herd_i),
++  0.005 * sin(0.29 * herd_i)
+ )
+ herd_3d <- simulate_boids(
+   boids_state(
+diff --git a/tests/testthat/test-core-simulation.R b/tests/testthat/test-core-simulation.R
+index 2fe489a..c333333 100644
+--- a/tests/testthat/test-core-simulation.R
++++ b/tests/testthat/test-core-simulation.R
+@@ -31,6 +31,28 @@ test_that("simulation is reproducible with a fixed seed", {
+   expect_equal(as.data.frame(sim1), as.data.frame(sim2), tolerance = 1e-12)
+ })
+
++test_that("seeded state construction does not modify the global RNG state", {
++  had_seed <- exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
++  old_seed <- if (had_seed) get(".Random.seed", envir = .GlobalEnv, inherits = FALSE) else NULL
++
++  state1 <- boids_state(8, "2d", seed = 123)
++  state2 <- boids_state(8, "2d", seed = 123)
++  expect_equal(state1, state2)
++
++  if (had_seed) {
++    expect_identical(get(".Random.seed", envir = .GlobalEnv, inherits = FALSE), old_seed)
++  } else {
++    expect_false(exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE))
++  }
++})
++
++test_that("seeded simulation noise is reproducible without R-level set.seed", {
++  state <- boids_state(12, "2d", seed = 11)
++  params <- boids_params("2d", noise = 0.01)
++  sim1 <- simulate_boids(state, params = params, steps = 5, seed = 101)
++  sim2 <- simulate_boids(state, params = params, steps = 5, seed = 101)
++  expect_equal(as.data.frame(sim1), as.data.frame(sim2), tolerance = 1e-12)
++})
++
+ test_that("grid and naive engines agree when all boids share one cell", {
+   bounds <- matrix(c(-0.2, -0.2, 0.2, 0.2), ncol = 2, dimnames = list(c("x", "y"), c("min", "max")))
+   state <- boids_state(10, "2d", bounds = bounds, seed = 5)

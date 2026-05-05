@@ -11,7 +11,8 @@ boids_state(
   positions = NULL,
   velocities = NULL,
   species = "boid",
-  seed = NULL
+  seed = NULL,
+  .rng = NULL
 )
 }
 \arguments{
@@ -25,7 +26,11 @@ boids_state(
 
 \item{species}{Species labels, recycled to \code{n}.}
 
-\item{seed}{Optional seed for reproducible initialization.}
+\item{seed}{Optional integer seed for reproducible initialization. When
+supplied, a package-local generator is used and the global R random-number
+state is not modified.}
+
+\item{.rng}{Internal package-local random-number generator.}
 }
 \value{
 A \code{boids_state} data frame.

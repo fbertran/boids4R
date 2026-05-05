@@ -21,7 +21,9 @@ boids_scenario(
 
 \item{dimension}{Scenario dimension. Some scenario names imply a dimension.}
 
-\item{seed}{Optional seed.}
+\item{seed}{Optional integer seed for reproducible scenario initialization
+and simulation noise. When supplied, the global R random-number state is
+not modified.}
 
 \item{steps}{Number of simulation steps.}
 
