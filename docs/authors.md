@@ -10,13 +10,13 @@
 Source:
 [`inst/CITATION`](https://github.com/fbertran/boids4R/blob/HEAD/inst/CITATION)
 
-Frederic Bertrand (2026). Reynolds-Style Boids and Swarm Simulation for
-R. R package version 0.3.0.
+Frederic Bertrand (2026). Reynolds-Style Boids and Swarm Simulation. R
+package version 0.3.1.
 
     @Manual{,
-      title = {Reynolds-Style Boids and Swarm Simulation for R},
+      title = {Reynolds-Style Boids and Swarm Simulation},
       author = {Frederic Bertrand},
       year = {2026},
-      note = {R package version 0.3.0},
+      note = {R package version 0.3.1},
       url = {https://CRAN.R-project.org/package=boids4R},
     }

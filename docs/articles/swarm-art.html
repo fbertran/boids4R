@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">boids4R</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -82,15 +82,34 @@
 <p>Recorded boids frames can be used as generative drawing material.
 This vignette keeps the simulation renderer-neutral, then turns frame
 tables into static artworks with base R graphics.</p>
+<p>The vignette has two parts:</p>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Foundational swarm-art recipes</strong>, which introduce
+trails, time layering, negative space, and depth coding.</li>
+<li>
+<strong>Spectacular swarm-art examples</strong>, which combine
+richer initial states, obstacle fields, predator fields, and projected
+3D simulations.</li>
+</ol>
+<p>The examples use base R graphics so the vignette builds without
+optional visualization packages. Optional WebGL export chunks are not
+evaluated during package checks and write only to
+<code><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir()</a></code>.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://fbertran.github.io/boids4R/">boids4R</a></span><span class="op">)</span></span></code></pre></div>
-<div class="section level2">
-<h2 id="helpers">Helpers<a class="anchor" aria-label="anchor" href="#helpers"></a>
-</h2>
+<div class="section level3">
+<h3 id="shared-helpers">Shared helpers<a class="anchor" aria-label="anchor" href="#shared-helpers"></a>
+</h3>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">frame_table</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">sim</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">frames</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">sim</span><span class="op">)</span></span>
 <span>  <span class="va">frames</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">frames</span><span class="op">$</span><span class="va">id</span>, <span class="va">frames</span><span class="op">$</span><span class="va">frame</span><span class="op">)</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">final_frame</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">sim</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">frames</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">sim</span><span class="op">)</span></span>
+<span>  <span class="va">frames</span><span class="op">[</span><span class="va">frames</span><span class="op">$</span><span class="va">frame</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">frames</span><span class="op">$</span><span class="va">frame</span><span class="op">)</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
 <span><span class="op">}</span></span>
 <span></span>
 <span><span class="va">world_limits</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">sim</span><span class="op">)</span> <span class="op">{</span></span>
@@ -116,11 +135,105 @@ tables into static artworks with base R graphics.</p>
 <span></span>
 <span><span class="va">fade_palette</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span>, <span class="va">palette</span> <span class="op">=</span> <span class="st">"Inferno"</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu">grDevices</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grDevices/palettes.html" class="external-link">hcl.colors</a></span><span class="op">(</span><span class="va">n</span>, <span class="va">palette</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">scale01</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">r</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">x</span>, finite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.finite</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span><span class="op">)</span> <span class="op">||</span> <span class="fu"><a href="https://rdrr.io/r/base/diff.html" class="external-link">diff</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span> <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="op">(</span><span class="va">x</span> <span class="op">-</span> <span class="va">r</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/diff.html" class="external-link">diff</a></span><span class="op">(</span><span class="va">r</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">speed_palette</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">palette</span> <span class="op">=</span> <span class="st">"Inferno"</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu">grDevices</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grDevices/palettes.html" class="external-link">hcl.colors</a></span><span class="op">(</span><span class="fl">64</span>, <span class="va">palette</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="fl">1L</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmin</a></span><span class="op">(</span><span class="fl">64L</span>, <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">floor</a></span><span class="op">(</span><span class="fl">1</span> <span class="op">+</span> <span class="fl">63</span> <span class="op">*</span> <span class="fu">scale01</span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">select_trails</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">sim</span>, <span class="va">n_ids</span> <span class="op">=</span> <span class="fl">80L</span>, <span class="va">every</span> <span class="op">=</span> <span class="fl">1L</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">frames</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">sim</span><span class="op">)</span></span>
+<span>  <span class="va">ids</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">frames</span><span class="op">$</span><span class="va">id</span><span class="op">)</span></span>
+<span>  <span class="va">ids</span> <span class="op">&lt;-</span> <span class="va">ids</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">ids</span><span class="op">)</span>, <span class="va">n_ids</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
+<span>  <span class="va">frames</span> <span class="op">&lt;-</span> <span class="va">frames</span><span class="op">[</span><span class="va">frames</span><span class="op">$</span><span class="va">id</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">ids</span> <span class="op">&amp;</span> <span class="va">frames</span><span class="op">$</span><span class="va">frame</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%%</a></span> <span class="va">every</span> <span class="op">==</span> <span class="fl">0L</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
+<span>  <span class="va">frames</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">frames</span><span class="op">$</span><span class="va">id</span>, <span class="va">frames</span><span class="op">$</span><span class="va">frame</span><span class="op">)</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">draw_trail_art</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">sim</span>,</span>
+<span>                           <span class="va">title</span>,</span>
+<span>                           <span class="va">n_ids</span> <span class="op">=</span> <span class="fl">90L</span>,</span>
+<span>                           <span class="va">every</span> <span class="op">=</span> <span class="fl">1L</span>,</span>
+<span>                           <span class="va">palette</span> <span class="op">=</span> <span class="st">"Inferno"</span>,</span>
+<span>                           <span class="va">trail_alpha</span> <span class="op">=</span> <span class="fl">0.16</span>,</span>
+<span>                           <span class="va">point_alpha</span> <span class="op">=</span> <span class="fl">0.82</span>,</span>
+<span>                           <span class="va">point_cex</span> <span class="op">=</span> <span class="fl">0.55</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">trails</span> <span class="op">&lt;-</span> <span class="fu">select_trails</span><span class="op">(</span><span class="va">sim</span>, n_ids <span class="op">=</span> <span class="va">n_ids</span>, every <span class="op">=</span> <span class="va">every</span><span class="op">)</span></span>
+<span>  <span class="va">final</span> <span class="op">&lt;-</span> <span class="fu">final_frame</span><span class="op">(</span><span class="va">sim</span><span class="op">)</span></span>
+<span>  <span class="va">lim</span> <span class="op">&lt;-</span> <span class="fu">world_limits</span><span class="op">(</span><span class="va">sim</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="fu">graphics</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>    <span class="cn">NA_real_</span>, <span class="cn">NA_real_</span>,</span>
+<span>    xlim <span class="op">=</span> <span class="va">lim</span><span class="op">$</span><span class="va">xlim</span>,</span>
+<span>    ylim <span class="op">=</span> <span class="va">lim</span><span class="op">$</span><span class="va">ylim</span>,</span>
+<span>    asp <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>    axes <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>    xlab <span class="op">=</span> <span class="st">""</span>,</span>
+<span>    ylab <span class="op">=</span> <span class="st">""</span>,</span>
+<span>    main <span class="op">=</span> <span class="va">title</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">cols</span> <span class="op">&lt;-</span> <span class="fu">speed_palette</span><span class="op">(</span><span class="va">trails</span><span class="op">$</span><span class="va">speed</span>, palette <span class="op">=</span> <span class="va">palette</span><span class="op">)</span></span>
+<span>  <span class="va">ids</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/split.html" class="external-link">split</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">trails</span><span class="op">)</span><span class="op">)</span>, <span class="va">trails</span><span class="op">$</span><span class="va">id</span><span class="op">)</span></span>
+<span>  <span class="kw">for</span> <span class="op">(</span><span class="va">ii</span> <span class="kw">in</span> <span class="va">ids</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">ii</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">1L</span><span class="op">)</span> <span class="op">{</span></span>
+<span>      <span class="fu">graphics</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span></span>
+<span>        <span class="va">trails</span><span class="op">$</span><span class="va">x</span><span class="op">[</span><span class="va">ii</span><span class="op">]</span>, <span class="va">trails</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="va">ii</span><span class="op">]</span>,</span>
+<span>        col <span class="op">=</span> <span class="fu">grDevices</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grDevices/adjustcolor.html" class="external-link">adjustcolor</a></span><span class="op">(</span><span class="va">cols</span><span class="op">[</span><span class="va">ii</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">ii</span><span class="op">)</span><span class="op">]</span><span class="op">]</span>, alpha.f <span class="op">=</span> <span class="va">trail_alpha</span><span class="op">)</span>,</span>
+<span>        lwd <span class="op">=</span> <span class="fl">0.8</span></span>
+<span>      <span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
+<span>  <span class="op">}</span></span>
+<span></span>
+<span>  <span class="fu">graphics</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/graphics/points.html" class="external-link">points</a></span><span class="op">(</span></span>
+<span>    <span class="va">final</span><span class="op">$</span><span class="va">x</span>, <span class="va">final</span><span class="op">$</span><span class="va">y</span>,</span>
+<span>    pch <span class="op">=</span> <span class="fl">16</span>,</span>
+<span>    cex <span class="op">=</span> <span class="va">point_cex</span>,</span>
+<span>    col <span class="op">=</span> <span class="fu">grDevices</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grDevices/adjustcolor.html" class="external-link">adjustcolor</a></span><span class="op">(</span><span class="fu">speed_palette</span><span class="op">(</span><span class="va">final</span><span class="op">$</span><span class="va">speed</span>, <span class="va">palette</span><span class="op">)</span>, alpha.f <span class="op">=</span> <span class="va">point_alpha</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">radial_state</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span>,</span>
+<span>                         <span class="va">bounds</span>,</span>
+<span>                         <span class="va">species</span> <span class="op">=</span> <span class="st">"boid"</span>,</span>
+<span>                         <span class="va">radius</span> <span class="op">=</span> <span class="fl">1.15</span>,</span>
+<span>                         <span class="va">twist</span> <span class="op">=</span> <span class="fl">3.0</span>,</span>
+<span>                         <span class="va">inward</span> <span class="op">=</span> <span class="fl">0.15</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">i</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
+<span>  <span class="va">theta</span> <span class="op">&lt;-</span> <span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span> <span class="op">*</span> <span class="va">i</span> <span class="op">/</span> <span class="va">n</span></span>
+<span>  <span class="va">r</span> <span class="op">&lt;-</span> <span class="va">radius</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">i</span> <span class="op">/</span> <span class="va">n</span><span class="op">)</span></span>
+<span>  <span class="va">positions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span></span>
+<span>    <span class="va">r</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span>,</span>
+<span>    <span class="va">r</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span>  <span class="va">velocities</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span></span>
+<span>    <span class="op">-</span><span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span> <span class="op">+</span> <span class="va">inward</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">twist</span> <span class="op">*</span> <span class="va">theta</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">theta</span><span class="op">)</span> <span class="op">+</span> <span class="va">inward</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">twist</span> <span class="op">*</span> <span class="va">theta</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span>  <span class="fu"><a href="../reference/boids_state.html">boids_state</a></span><span class="op">(</span></span>
+<span>    <span class="va">n</span>,</span>
+<span>    <span class="st">"2d"</span>,</span>
+<span>    bounds <span class="op">=</span> <span class="va">bounds</span>,</span>
+<span>    positions <span class="op">=</span> <span class="va">positions</span>,</span>
+<span>    velocities <span class="op">=</span> <span class="va">velocities</span>,</span>
+<span>    species <span class="op">=</span> <span class="va">species</span></span>
+<span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="trail-drawing">Trail drawing<a class="anchor" aria-label="anchor" href="#trail-drawing"></a>
+<h2 id="foundational-swarm-art-recipes">Foundational swarm-art recipes<a class="anchor" aria-label="anchor" href="#foundational-swarm-art-recipes"></a>
 </h2>
+<p>This section introduces compact recipes for using recorded frames as
+drawing material. These examples favour simple simulation calls and
+short plotting code.</p>
+<div class="section level3">
+<h3 id="trail-drawing">Trail drawing<a class="anchor" aria-label="anchor" href="#trail-drawing"></a>
+</h3>
 <p>Line trails turn motion into a dense drawing. The example below draws
 only a subset of boids so individual paths remain visible.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
@@ -145,9 +258,9 @@ only a subset of boids so individual paths remain visible.</p>
 <span><span class="op">}</span></span></code></pre></div>
 <p><img src="swarm-art_files/figure-html/trail-art-1.png" class="r-plt" alt="" width="672"></p>
 </div>
-<div class="section level2">
-<h2 id="time-layered-particles">Time-layered particles<a class="anchor" aria-label="anchor" href="#time-layered-particles"></a>
-</h2>
+<div class="section level3">
+<h3 id="time-layered-particles">Time-layered particles<a class="anchor" aria-label="anchor" href="#time-layered-particles"></a>
+</h3>
 <p>A different style keeps all boids but draws successive frames with
 increasing opacity and size. Recent frames become the bright
 foreground.</p>
@@ -179,9 +292,9 @@ foreground.</p>
 <span><span class="op">}</span></span></code></pre></div>
 <p><img src="swarm-art_files/figure-html/particle-art-1.png" class="r-plt" alt="" width="672"></p>
 </div>
-<div class="section level2">
-<h2 id="negative-space-obstacles">Negative-space obstacles<a class="anchor" aria-label="anchor" href="#negative-space-obstacles"></a>
-</h2>
+<div class="section level3">
+<h3 id="negative-space-obstacles">Negative-space obstacles<a class="anchor" aria-label="anchor" href="#negative-space-obstacles"></a>
+</h3>
 <p>Obstacle and predator avoidance can produce visual gaps. Here the
 obstacles are drawn as quiet negative-space forms under the flock
 traces.</p>
@@ -216,9 +329,9 @@ traces.</p>
 <span><span class="op">}</span></span></code></pre></div>
 <p><img src="swarm-art_files/figure-html/negative-space-art-1.png" class="r-plt" alt="" width="672"></p>
 </div>
-<div class="section level2">
-<h2 id="depth-as-colour">Depth as colour<a class="anchor" aria-label="anchor" href="#depth-as-colour"></a>
-</h2>
+<div class="section level3">
+<h3 id="depth-as-colour">Depth as colour<a class="anchor" aria-label="anchor" href="#depth-as-colour"></a>
+</h3>
 <p>For 3D simulations, z can drive colour or point size in a 2D
 projection. This creates a depth print without needing a 3D
 renderer.</p>
@@ -230,9 +343,8 @@ renderer.</p>
 <span>  record_every <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  seed <span class="op">=</span> <span class="fl">740</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">depth_final</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">depth_sim</span><span class="op">)</span></span>
-<span><span class="va">depth_final</span> <span class="op">&lt;-</span> <span class="va">depth_final</span><span class="op">[</span><span class="va">depth_final</span><span class="op">$</span><span class="va">frame</span> <span class="op">==</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">depth_final</span><span class="op">$</span><span class="va">frame</span><span class="op">)</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
-<span><span class="va">depth_rank</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">depth_final</span><span class="op">$</span><span class="va">z</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">depth_final</span><span class="op">$</span><span class="va">z</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/diff.html" class="external-link">diff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">depth_final</span><span class="op">$</span><span class="va">z</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">depth_final</span> <span class="op">&lt;-</span> <span class="fu">final_frame</span><span class="op">(</span><span class="va">depth_sim</span><span class="op">)</span></span>
+<span><span class="va">depth_rank</span> <span class="op">&lt;-</span> <span class="fu">scale01</span><span class="op">(</span><span class="va">depth_final</span><span class="op">$</span><span class="va">z</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">draw_empty_canvas</span><span class="op">(</span><span class="va">depth_sim</span>, <span class="st">"3D depth print"</span><span class="op">)</span></span>
 <span><span class="va">depth_cols</span> <span class="op">&lt;-</span> <span class="fu">fade_palette</span><span class="op">(</span><span class="fl">100</span>, <span class="st">"BluYl"</span><span class="op">)</span></span>
@@ -245,27 +357,197 @@ renderer.</p>
 <span><span class="op">)</span></span></code></pre></div>
 <p><img src="swarm-art_files/figure-html/depth-art-1.png" class="r-plt" alt="" width="672"></p>
 </div>
+</div>
+<div class="section level2">
+<h2 id="spectacular-swarm-art-examples">Spectacular swarm-art examples<a class="anchor" aria-label="anchor" href="#spectacular-swarm-art-examples"></a>
+</h2>
+<p>This section uses larger swarms, custom initial conditions,
+speed-coded trails, and projected 3D motion to create more dramatic
+static artworks.</p>
+<div class="section level3">
+<h3 id="nebula-vortex">Nebula vortex<a class="anchor" aria-label="anchor" href="#nebula-vortex"></a>
+</h3>
+<p>A dense 3D murmuration is projected from above. The colour encodes
+speed and the trails reveal the invisible flow field.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">nebula</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/boids_scenario.html">boids_scenario</a></span><span class="op">(</span></span>
+<span>  <span class="st">"murmuration_3d"</span>,</span>
+<span>  n <span class="op">=</span> <span class="fl">220</span>,</span>
+<span>  steps <span class="op">=</span> <span class="fl">55</span>,</span>
+<span>  record_every <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  seed <span class="op">=</span> <span class="fl">2401</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">draw_trail_art</span><span class="op">(</span></span>
+<span>  <span class="va">nebula</span>,</span>
+<span>  <span class="st">"Nebula vortex: speed-coloured murmuration trails"</span>,</span>
+<span>  n_ids <span class="op">=</span> <span class="fl">120</span>,</span>
+<span>  every <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  palette <span class="op">=</span> <span class="st">"Inferno"</span>,</span>
+<span>  trail_alpha <span class="op">=</span> <span class="fl">0.13</span>,</span>
+<span>  point_cex <span class="op">=</span> <span class="fl">0.45</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="swarm-art_files/figure-html/nebula-vortex-1.png" class="r-plt" alt="" width="672"></p>
+</div>
+<div class="section level3">
+<h3 id="predator-comet">Predator comet<a class="anchor" aria-label="anchor" href="#predator-comet"></a>
+</h3>
+<p>A predator field cuts through a 2D school. The swarm leaves a
+comet-like wake as boids avoid the danger zone while preserving local
+alignment.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">comet</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/boids_scenario.html">boids_scenario</a></span><span class="op">(</span></span>
+<span>  <span class="st">"predator_avoidance_2d"</span>,</span>
+<span>  n <span class="op">=</span> <span class="fl">180</span>,</span>
+<span>  steps <span class="op">=</span> <span class="fl">65</span>,</span>
+<span>  record_every <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  seed <span class="op">=</span> <span class="fl">2402</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">draw_trail_art</span><span class="op">(</span></span>
+<span>  <span class="va">comet</span>,</span>
+<span>  <span class="st">"Predator comet: avoidance wake"</span>,</span>
+<span>  n_ids <span class="op">=</span> <span class="fl">110</span>,</span>
+<span>  every <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  palette <span class="op">=</span> <span class="st">"Plasma"</span>,</span>
+<span>  trail_alpha <span class="op">=</span> <span class="fl">0.18</span>,</span>
+<span>  point_cex <span class="op">=</span> <span class="fl">0.55</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="swarm-art_files/figure-html/predator-comet-1.png" class="r-plt" alt="" width="672"></p>
+</div>
+<div class="section level3">
+<h3 id="obstacle-bloom">Obstacle bloom<a class="anchor" aria-label="anchor" href="#obstacle-bloom"></a>
+</h3>
+<p>The boids start on a deterministic spiral and are pulled toward a
+goal while three obstacle discs carve voids in the drawing.</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">bloom_bounds</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2.4</span>, <span class="op">-</span><span class="fl">1.45</span>, <span class="fl">2.4</span>, <span class="fl">1.45</span><span class="op">)</span>,</span>
+<span>  ncol <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"x"</span>, <span class="st">"y"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"min"</span>, <span class="st">"max"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">bloom</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/simulate_boids.html">simulate_boids</a></span><span class="op">(</span></span>
+<span>  <span class="fu">radial_state</span><span class="op">(</span></span>
+<span>    <span class="fl">210</span>,</span>
+<span>    <span class="va">bloom_bounds</span>,</span>
+<span>    species <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"amber"</span>, <span class="st">"blue"</span>, <span class="st">"white"</span><span class="op">)</span>, length.out <span class="op">=</span> <span class="fl">210</span><span class="op">)</span>,</span>
+<span>    radius <span class="op">=</span> <span class="fl">1.22</span>,</span>
+<span>    twist <span class="op">=</span> <span class="fl">5.0</span>,</span>
+<span>    inward <span class="op">=</span> <span class="fl">0.28</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="../reference/boids_world.html">boids_world</a></span><span class="op">(</span></span>
+<span>    <span class="st">"2d"</span>,</span>
+<span>    bounds <span class="op">=</span> <span class="va">bloom_bounds</span>,</span>
+<span>    boundary <span class="op">=</span> <span class="st">"reflect"</span>,</span>
+<span>    obstacles <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>      x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">0.72</span>, <span class="fl">0.02</span>, <span class="fl">0.82</span><span class="op">)</span>,</span>
+<span>      y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.48</span>, <span class="op">-</span><span class="fl">0.38</span>, <span class="fl">0.36</span><span class="op">)</span>,</span>
+<span>      radius <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.28</span>, <span class="fl">0.40</span>, <span class="fl">0.30</span><span class="op">)</span></span>
+<span>    <span class="op">)</span>,</span>
+<span>    attractors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fl">1.95</span>, y <span class="op">=</span> <span class="op">-</span><span class="fl">0.78</span>, strength <span class="op">=</span> <span class="fl">0.72</span><span class="op">)</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  <span class="fu"><a href="../reference/boids_params.html">boids_params</a></span><span class="op">(</span></span>
+<span>    <span class="st">"2d"</span>,</span>
+<span>    separation_weight <span class="op">=</span> <span class="fl">1.36</span>,</span>
+<span>    alignment_weight <span class="op">=</span> <span class="fl">0.98</span>,</span>
+<span>    cohesion_weight <span class="op">=</span> <span class="fl">0.70</span>,</span>
+<span>    obstacle_weight <span class="op">=</span> <span class="fl">2.80</span>,</span>
+<span>    goal_weight <span class="op">=</span> <span class="fl">0.24</span>,</span>
+<span>    max_speed <span class="op">=</span> <span class="fl">1.22</span>,</span>
+<span>    max_force <span class="op">=</span> <span class="fl">0.11</span>,</span>
+<span>    noise <span class="op">=</span> <span class="fl">0.001</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>  steps <span class="op">=</span> <span class="fl">70</span>,</span>
+<span>  record_every <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  seed <span class="op">=</span> <span class="fl">2403</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">draw_trail_art</span><span class="op">(</span></span>
+<span>  <span class="va">bloom</span>,</span>
+<span>  <span class="st">"Obstacle bloom: voids carved into spiral motion"</span>,</span>
+<span>  n_ids <span class="op">=</span> <span class="fl">140</span>,</span>
+<span>  every <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  palette <span class="op">=</span> <span class="st">"Viridis"</span>,</span>
+<span>  trail_alpha <span class="op">=</span> <span class="fl">0.16</span>,</span>
+<span>  point_cex <span class="op">=</span> <span class="fl">0.50</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="swarm-art_files/figure-html/obstacle-bloom-1.png" class="r-plt" alt="" width="672"></p>
+</div>
+<div class="section level3">
+<h3 id="double-helix-ribbon">Double helix ribbon<a class="anchor" aria-label="anchor" href="#double-helix-ribbon"></a>
+</h3>
+<p>A full 3D mixed-species swarm can be turned into a ribbon-like image
+by mapping height to point size. The plot is still a static base-R
+projection; no WebGL is required to build the vignette.</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ribbon</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/boids_scenario.html">boids_scenario</a></span><span class="op">(</span></span>
+<span>  <span class="st">"mixed_species_3d"</span>,</span>
+<span>  n <span class="op">=</span> <span class="fl">210</span>,</span>
+<span>  steps <span class="op">=</span> <span class="fl">60</span>,</span>
+<span>  record_every <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  seed <span class="op">=</span> <span class="fl">2404</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">ribbon_final</span> <span class="op">&lt;-</span> <span class="fu">final_frame</span><span class="op">(</span><span class="va">ribbon</span><span class="op">)</span></span>
+<span><span class="va">z_size</span> <span class="op">&lt;-</span> <span class="fl">0.35</span> <span class="op">+</span> <span class="fl">1.20</span> <span class="op">*</span> <span class="fu">scale01</span><span class="op">(</span><span class="va">ribbon_final</span><span class="op">$</span><span class="va">z</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">graphics</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span></span>
+<span>  <span class="va">ribbon_final</span><span class="op">$</span><span class="va">x</span>, <span class="va">ribbon_final</span><span class="op">$</span><span class="va">y</span>,</span>
+<span>  xlim <span class="op">=</span> <span class="va">ribbon</span><span class="op">$</span><span class="va">world</span><span class="op">$</span><span class="va">bounds</span><span class="op">[</span><span class="st">"x"</span>, <span class="op">]</span>,</span>
+<span>  ylim <span class="op">=</span> <span class="va">ribbon</span><span class="op">$</span><span class="va">world</span><span class="op">$</span><span class="va">bounds</span><span class="op">[</span><span class="st">"y"</span>, <span class="op">]</span>,</span>
+<span>  asp <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  axes <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  xlab <span class="op">=</span> <span class="st">""</span>,</span>
+<span>  ylab <span class="op">=</span> <span class="st">""</span>,</span>
+<span>  main <span class="op">=</span> <span class="st">"Double helix ribbon: height-coded 3D projection"</span>,</span>
+<span>  pch <span class="op">=</span> <span class="fl">16</span>,</span>
+<span>  cex <span class="op">=</span> <span class="va">z_size</span>,</span>
+<span>  col <span class="op">=</span> <span class="fu">grDevices</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grDevices/adjustcolor.html" class="external-link">adjustcolor</a></span><span class="op">(</span><span class="fu">speed_palette</span><span class="op">(</span><span class="va">ribbon_final</span><span class="op">$</span><span class="va">speed</span>, <span class="st">"Dark 3"</span><span class="op">)</span>, alpha.f <span class="op">=</span> <span class="fl">0.78</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="swarm-art_files/figure-html/helix-ribbon-1.png" class="r-plt" alt="" width="672"></p>
+</div>
+</div>
 <div class="section level2">
 <h2 id="exporting-art">Exporting art<a class="anchor" aria-label="anchor" href="#exporting-art"></a>
 </h2>
-<p>Use normal graphics devices to export a static artwork. The same
-frame table can also be sent to <code>ggWebGL</code> when an animated
-artwork is preferable.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/grDevices/png.html" class="external-link">png</a></span><span class="op">(</span><span class="st">"swarm-art.png"</span>, width <span class="op">=</span> <span class="fl">1800</span>, height <span class="op">=</span> <span class="fl">1800</span>, res <span class="op">=</span> <span class="fl">220</span><span class="op">)</span></span>
+<p>Use normal graphics devices to export a static artwork. Examples that
+write files must use temporary locations so package checks do not write
+into the package directory or the user’s working directory.</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"swarm-art.png"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/grDevices/png.html" class="external-link">png</a></span><span class="op">(</span><span class="va">outfile</span>, width <span class="op">=</span> <span class="fl">1800</span>, height <span class="op">=</span> <span class="fl">1800</span>, res <span class="op">=</span> <span class="fl">220</span><span class="op">)</span></span>
 <span><span class="fu">draw_empty_canvas</span><span class="op">(</span><span class="va">trail_sim</span>, <span class="st">"murmuration trails"</span><span class="op">)</span></span>
 <span><span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">ids</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">path</span> <span class="op">&lt;-</span> <span class="va">trail_frames</span><span class="op">[</span><span class="va">trail_frames</span><span class="op">$</span><span class="va">id</span> <span class="op">==</span> <span class="va">ids</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
 <span>  <span class="fu">graphics</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">path</span><span class="op">$</span><span class="va">x</span>, <span class="va">path</span><span class="op">$</span><span class="va">y</span>, col <span class="op">=</span> <span class="va">cols</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, lwd <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/grDevices/dev.html" class="external-link">dev.off</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<span><span class="fu"><a href="https://rdrr.io/r/grDevices/dev.html" class="external-link">dev.off</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/browseURL.html" class="external-link">browseURL</a></span><span class="op">(</span><span class="va">outfile</span><span class="op">)</span></span></code></pre></div>
+<p>The same frame table can also be sent to <code>ggWebGL</code> when an
+animated artwork is preferable. This optional block is not evaluated
+during checks and also writes only to <code><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir()</a></code>.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"ggWebGL"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span>
-<span>    <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html" class="external-link">packageVersion</a></span><span class="op">(</span><span class="st">"ggWebGL"</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="st">"0.4.0"</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html" class="external-link">packageVersion</a></span><span class="op">(</span><span class="st">"ggWebGL"</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="st">"0.4.0"</span> <span class="op">&amp;&amp;</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"htmlwidgets"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">spec</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_ggwebgl_spec.html">as_ggwebgl_spec</a></span><span class="op">(</span><span class="va">depth_sim</span>, vector_every <span class="op">=</span> <span class="fl">18</span>, shader <span class="op">=</span> <span class="st">"density_splat"</span><span class="op">)</span></span>
 <span>  <span class="va">spec</span><span class="op">$</span><span class="va">render</span><span class="op">$</span><span class="va">timeline</span><span class="op">$</span><span class="va">autoplay</span> <span class="op">&lt;-</span> <span class="cn">TRUE</span></span>
-<span>  <span class="fu">ggWebGL</span><span class="fu">::</span><span class="fu"><a href="https://fbertran.github.io/ggWebGL/reference/ggWebGL.html" class="external-link">ggWebGL</a></span><span class="op">(</span><span class="va">spec</span>, height <span class="op">=</span> <span class="fl">540</span><span class="op">)</span></span>
+<span>  <span class="va">widget</span> <span class="op">&lt;-</span> <span class="fu">ggWebGL</span><span class="fu">::</span><span class="fu"><a href="https://fbertran.github.io/ggWebGL/reference/ggWebGL.html" class="external-link">ggWebGL</a></span><span class="op">(</span><span class="va">spec</span>, height <span class="op">=</span> <span class="fl">540</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">outfile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"boids4R_depth_art.html"</span><span class="op">)</span></span>
+<span>  <span class="fu">htmlwidgets</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/htmlwidgets/man/saveWidget.html" class="external-link">saveWidget</a></span><span class="op">(</span><span class="va">widget</span>, <span class="va">outfile</span>, selfcontained <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span>  <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/browseURL.html" class="external-link">browseURL</a></span><span class="op">(</span><span class="va">outfile</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="design-notes">Design notes<a class="anchor" aria-label="anchor" href="#design-notes"></a>
+</h2>
+<p>These examples are intentionally renderer-neutral. The simulation
+objects are ordinary <code>boids_simulation</code> values and the art
+helpers consume only the recorded frame data. This keeps the examples
+portable for CRAN checks while still making it straightforward to hand
+the same frames to WebGL renderers for interactive presentations.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

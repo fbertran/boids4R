@@ -4,16 +4,34 @@ Recorded boids frames can be used as generative drawing material. This
 vignette keeps the simulation renderer-neutral, then turns frame tables
 into static artworks with base R graphics.
 
+The vignette has two parts:
+
+1.  **Foundational swarm-art recipes**, which introduce trails, time
+    layering, negative space, and depth coding.
+2.  **Spectacular swarm-art examples**, which combine richer initial
+    states, obstacle fields, predator fields, and projected 3D
+    simulations.
+
+The examples use base R graphics so the vignette builds without optional
+visualization packages. Optional WebGL export chunks are not evaluated
+during package checks and write only to
+[`tempdir()`](https://rdrr.io/r/base/tempfile.html).
+
 ``` r
 library(boids4R)
 ```
 
-## Helpers
+### Shared helpers
 
 ``` r
 frame_table <- function(sim) {
   frames <- as.data.frame(sim)
   frames[order(frames$id, frames$frame), , drop = FALSE]
+}
+
+final_frame <- function(sim) {
+  frames <- as.data.frame(sim)
+  frames[frames$frame == max(frames$frame), , drop = FALSE]
 }
 
 world_limits <- function(sim) {
@@ -40,9 +58,103 @@ draw_empty_canvas <- function(sim, title = "") {
 fade_palette <- function(n, palette = "Inferno") {
   grDevices::hcl.colors(n, palette)
 }
+
+scale01 <- function(x) {
+  r <- range(x, finite = TRUE)
+  if (!all(is.finite(r)) || diff(r) == 0) return(rep(0.5, length(x)))
+  (x - r[1]) / diff(r)
+}
+
+speed_palette <- function(x, palette = "Inferno") {
+  grDevices::hcl.colors(64, palette)[pmax(1L, pmin(64L, floor(1 + 63 * scale01(x))))]
+}
+
+select_trails <- function(sim, n_ids = 80L, every = 1L) {
+  frames <- as.data.frame(sim)
+  ids <- unique(frames$id)
+  ids <- ids[seq_len(min(length(ids), n_ids))]
+  frames <- frames[frames$id %in% ids & frames$frame %% every == 0L, , drop = FALSE]
+  frames[order(frames$id, frames$frame), , drop = FALSE]
+}
+
+draw_trail_art <- function(sim,
+                           title,
+                           n_ids = 90L,
+                           every = 1L,
+                           palette = "Inferno",
+                           trail_alpha = 0.16,
+                           point_alpha = 0.82,
+                           point_cex = 0.55) {
+  trails <- select_trails(sim, n_ids = n_ids, every = every)
+  final <- final_frame(sim)
+  lim <- world_limits(sim)
+
+  graphics::plot(
+    NA_real_, NA_real_,
+    xlim = lim$xlim,
+    ylim = lim$ylim,
+    asp = 1,
+    axes = FALSE,
+    xlab = "",
+    ylab = "",
+    main = title
+  )
+
+  cols <- speed_palette(trails$speed, palette = palette)
+  ids <- split(seq_len(nrow(trails)), trails$id)
+  for (ii in ids) {
+    if (length(ii) > 1L) {
+      graphics::lines(
+        trails$x[ii], trails$y[ii],
+        col = grDevices::adjustcolor(cols[ii[length(ii)]], alpha.f = trail_alpha),
+        lwd = 0.8
+      )
+    }
+  }
+
+  graphics::points(
+    final$x, final$y,
+    pch = 16,
+    cex = point_cex,
+    col = grDevices::adjustcolor(speed_palette(final$speed, palette), alpha.f = point_alpha)
+  )
+}
+
+radial_state <- function(n,
+                         bounds,
+                         species = "boid",
+                         radius = 1.15,
+                         twist = 3.0,
+                         inward = 0.15) {
+  i <- seq_len(n)
+  theta <- 2 * pi * i / n
+  r <- radius * sqrt(i / n)
+  positions <- cbind(
+    r * cos(theta),
+    r * sin(theta)
+  )
+  velocities <- cbind(
+    -sin(theta) + inward * cos(twist * theta),
+    cos(theta) + inward * sin(twist * theta)
+  )
+  boids_state(
+    n,
+    "2d",
+    bounds = bounds,
+    positions = positions,
+    velocities = velocities,
+    species = species
+  )
+}
 ```
 
-## Trail drawing
+## Foundational swarm-art recipes
+
+This section introduces compact recipes for using recorded frames as
+drawing material. These examples favour simple simulation calls and
+short plotting code.
+
+### Trail drawing
 
 Line trails turn motion into a dense drawing. The example below draws
 only a subset of boids so individual paths remain visible.
@@ -73,7 +185,7 @@ for (i in seq_along(ids)) {
 
 ![](swarm-art_files/figure-html/trail-art-1.png)
 
-## Time-layered particles
+### Time-layered particles
 
 A different style keeps all boids but draws successive frames with
 increasing opacity and size. Recent frames become the bright foreground.
@@ -110,7 +222,7 @@ for (i in seq_along(frames)) {
 
 ![](swarm-art_files/figure-html/particle-art-1.png)
 
-## Negative-space obstacles
+### Negative-space obstacles
 
 Obstacle and predator avoidance can produce visual gaps. Here the
 obstacles are drawn as quiet negative-space forms under the flock
@@ -151,7 +263,7 @@ for (i in seq_along(negative_ids)) {
 
 ![](swarm-art_files/figure-html/negative-space-art-1.png)
 
-## Depth as colour
+### Depth as colour
 
 For 3D simulations, z can drive colour or point size in a 2D projection.
 This creates a depth print without needing a 3D renderer.
@@ -164,9 +276,8 @@ depth_sim <- boids_scenario(
   record_every = 5,
   seed = 740
 )
-depth_final <- as.data.frame(depth_sim)
-depth_final <- depth_final[depth_final$frame == max(depth_final$frame), , drop = FALSE]
-depth_rank <- (depth_final$z - min(depth_final$z)) / diff(range(depth_final$z))
+depth_final <- final_frame(depth_sim)
+depth_rank <- scale01(depth_final$z)
 ```
 
 ``` r
@@ -183,27 +294,202 @@ graphics::points(
 
 ![](swarm-art_files/figure-html/depth-art-1.png)
 
-## Exporting art
+## Spectacular swarm-art examples
 
-Use normal graphics devices to export a static artwork. The same frame
-table can also be sent to `ggWebGL` when an animated artwork is
-preferable.
+This section uses larger swarms, custom initial conditions, speed-coded
+trails, and projected 3D motion to create more dramatic static artworks.
+
+### Nebula vortex
+
+A dense 3D murmuration is projected from above. The colour encodes speed
+and the trails reveal the invisible flow field.
 
 ``` r
-png("swarm-art.png", width = 1800, height = 1800, res = 220)
+nebula <- boids_scenario(
+  "murmuration_3d",
+  n = 220,
+  steps = 55,
+  record_every = 2,
+  seed = 2401
+)
+
+draw_trail_art(
+  nebula,
+  "Nebula vortex: speed-coloured murmuration trails",
+  n_ids = 120,
+  every = 2,
+  palette = "Inferno",
+  trail_alpha = 0.13,
+  point_cex = 0.45
+)
+```
+
+![](swarm-art_files/figure-html/nebula-vortex-1.png)
+
+### Predator comet
+
+A predator field cuts through a 2D school. The swarm leaves a comet-like
+wake as boids avoid the danger zone while preserving local alignment.
+
+``` r
+comet <- boids_scenario(
+  "predator_avoidance_2d",
+  n = 180,
+  steps = 65,
+  record_every = 2,
+  seed = 2402
+)
+
+draw_trail_art(
+  comet,
+  "Predator comet: avoidance wake",
+  n_ids = 110,
+  every = 2,
+  palette = "Plasma",
+  trail_alpha = 0.18,
+  point_cex = 0.55
+)
+```
+
+![](swarm-art_files/figure-html/predator-comet-1.png)
+
+### Obstacle bloom
+
+The boids start on a deterministic spiral and are pulled toward a goal
+while three obstacle discs carve voids in the drawing.
+
+``` r
+bloom_bounds <- matrix(
+  c(-2.4, -1.45, 2.4, 1.45),
+  ncol = 2,
+  dimnames = list(c("x", "y"), c("min", "max"))
+)
+
+bloom <- simulate_boids(
+  radial_state(
+    210,
+    bloom_bounds,
+    species = rep(c("amber", "blue", "white"), length.out = 210),
+    radius = 1.22,
+    twist = 5.0,
+    inward = 0.28
+  ),
+  boids_world(
+    "2d",
+    bounds = bloom_bounds,
+    boundary = "reflect",
+    obstacles = data.frame(
+      x = c(-0.72, 0.02, 0.82),
+      y = c(0.48, -0.38, 0.36),
+      radius = c(0.28, 0.40, 0.30)
+    ),
+    attractors = data.frame(x = 1.95, y = -0.78, strength = 0.72)
+  ),
+  boids_params(
+    "2d",
+    separation_weight = 1.36,
+    alignment_weight = 0.98,
+    cohesion_weight = 0.70,
+    obstacle_weight = 2.80,
+    goal_weight = 0.24,
+    max_speed = 1.22,
+    max_force = 0.11,
+    noise = 0.001
+  ),
+  steps = 70,
+  record_every = 2,
+  seed = 2403
+)
+
+draw_trail_art(
+  bloom,
+  "Obstacle bloom: voids carved into spiral motion",
+  n_ids = 140,
+  every = 2,
+  palette = "Viridis",
+  trail_alpha = 0.16,
+  point_cex = 0.50
+)
+```
+
+![](swarm-art_files/figure-html/obstacle-bloom-1.png)
+
+### Double helix ribbon
+
+A full 3D mixed-species swarm can be turned into a ribbon-like image by
+mapping height to point size. The plot is still a static base-R
+projection; no WebGL is required to build the vignette.
+
+``` r
+ribbon <- boids_scenario(
+  "mixed_species_3d",
+  n = 210,
+  steps = 60,
+  record_every = 2,
+  seed = 2404
+)
+
+ribbon_final <- final_frame(ribbon)
+z_size <- 0.35 + 1.20 * scale01(ribbon_final$z)
+
+graphics::plot(
+  ribbon_final$x, ribbon_final$y,
+  xlim = ribbon$world$bounds["x", ],
+  ylim = ribbon$world$bounds["y", ],
+  asp = 1,
+  axes = FALSE,
+  xlab = "",
+  ylab = "",
+  main = "Double helix ribbon: height-coded 3D projection",
+  pch = 16,
+  cex = z_size,
+  col = grDevices::adjustcolor(speed_palette(ribbon_final$speed, "Dark 3"), alpha.f = 0.78)
+)
+```
+
+![](swarm-art_files/figure-html/helix-ribbon-1.png)
+
+## Exporting art
+
+Use normal graphics devices to export a static artwork. Examples that
+write files must use temporary locations so package checks do not write
+into the package directory or the user’s working directory.
+
+``` r
+outfile <- file.path(tempdir(), "swarm-art.png")
+png(outfile, width = 1800, height = 1800, res = 220)
 draw_empty_canvas(trail_sim, "murmuration trails")
 for (i in seq_along(ids)) {
   path <- trail_frames[trail_frames$id == ids[i], , drop = FALSE]
   graphics::lines(path$x, path$y, col = cols[i], lwd = 0.8)
 }
 dev.off()
+utils::browseURL(outfile)
 ```
+
+The same frame table can also be sent to `ggWebGL` when an animated
+artwork is preferable. This optional block is not evaluated during
+checks and also writes only to
+[`tempdir()`](https://rdrr.io/r/base/tempfile.html).
 
 ``` r
 if (requireNamespace("ggWebGL", quietly = TRUE) &&
-    utils::packageVersion("ggWebGL") >= "0.4.0") {
+    utils::packageVersion("ggWebGL") >= "0.4.0" &&
+    requireNamespace("htmlwidgets", quietly = TRUE)) {
   spec <- as_ggwebgl_spec(depth_sim, vector_every = 18, shader = "density_splat")
   spec$render$timeline$autoplay <- TRUE
-  ggWebGL::ggWebGL(spec, height = 540)
+  widget <- ggWebGL::ggWebGL(spec, height = 540)
+
+  outfile <- file.path(tempdir(), "boids4R_depth_art.html")
+  htmlwidgets::saveWidget(widget, outfile, selfcontained = FALSE)
+  utils::browseURL(outfile)
 }
 ```
+
+## Design notes
+
+These examples are intentionally renderer-neutral. The simulation
+objects are ordinary `boids_simulation` values and the art helpers
+consume only the recorded frame data. This keeps the examples portable
+for CRAN checks while still making it straightforward to hand the same
+frames to WebGL renderers for interactive presentations.

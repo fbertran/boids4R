@@ -11,6 +11,12 @@ as_ggwebgl_spec(x, ...)
 
 \item{...}{Additional arguments.}
 }
+\value{
+A \code{ggwebgl_spec} list for supported methods. For a
+\code{boids_simulation}, the list contains point and velocity-vector primitives,
+labels, WebGL view settings, selection options, and timeline metadata for
+rendering recorded boids frames with \code{ggWebGL::ggWebGL()}.
+}
 \description{
 This generic is defined locally so \code{boids4R} can offer an optional ggWebGL
 adapter without depending on ggWebGL at load time.

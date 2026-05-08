@@ -5,6 +5,10 @@
 #'
 #' @param x Object to convert.
 #' @param ... Additional arguments.
+#' @return A `ggwebgl_spec` list for supported methods. For a
+#'   `boids_simulation`, the list contains point and velocity-vector primitives,
+#'   labels, WebGL view settings, selection options, and timeline metadata for
+#'   rendering recorded boids frames with `ggWebGL::ggWebGL()`.
 #' @examples
 #' sim <- boids_scenario("schooling_2d", n = 15, steps = 3, seed = 5)
 #'

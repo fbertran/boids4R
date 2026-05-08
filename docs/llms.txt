@@ -1,4 +1,4 @@
-# boids4R, Deterministic Reynolds-style boids and swarm simulations ![](reference/figures/logo_boids4R.png)
+# boids4R, Deterministic Reynolds-style boids and swarm simulations ![boids4R logo](reference/figures/logo_boids4R.png)
 
 ## Frédéric Bertrand
 

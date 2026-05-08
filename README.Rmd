@@ -4,7 +4,7 @@ output: github_document
 
 <!-- README.md is generated from README.Rmd. Please edit that file. -->
 
-# boids4R, Deterministic Reynolds-style boids and swarm simulations <img src="man/figures/logo_boids4R.png" align="right" width="200"/>
+# boids4R, Deterministic Reynolds-style boids and swarm simulations <img src="man/figures/logo_boids4R.png" alt="boids4R logo" align="right" width="200"/>
 
 ## Frédéric Bertrand
 

@@ -1,3 +1,12 @@
+# boids4R 0.3.1
+
+- Updated `DESCRIPTION` for CRAN resubmission by removing the redundant
+  trailing "for R" from the title and adding the formal Reynolds (1987)
+  <doi:10.1145/37402.37406> method reference.
+- Added the missing `\value{}` documentation for `as_ggwebgl_spec()` and
+  described the `ggwebgl_spec` output structure.
+- Added alt text to the README logo image for pkgdown accessibility checks.
+
 # boids4R 0.3.0
 
 - Added a 3D-focused flock, herd, swarm, and school vignette with 2D overhead
