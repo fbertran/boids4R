@@ -1,3 +1,9 @@
+# boids4R 0.3.2
+
+- Improved `as_ggwebgl_spec()` display defaults with high-contrast species and
+  role palettes, emphasized current boids, faint recent trails, species-aware
+  velocity vectors, and visible obstacle/predator rings.
+
 # boids4R 0.3.1
 
 - Updated `DESCRIPTION` for CRAN resubmission by removing the redundant
@@ -5,6 +11,9 @@
   <doi:10.1145/37402.37406> method reference.
 - Added the missing `\value{}` documentation for `as_ggwebgl_spec()` and
   described the `ggwebgl_spec` output structure.
+- Improved `as_ggwebgl_spec()` display defaults with high-contrast species and
+  role palettes, emphasized current boids, faint recent trails, species-aware
+  velocity vectors, and visible obstacle/predator rings.
 - Added alt text to the README logo image for pkgdown accessibility checks.
 
 # boids4R 0.3.0

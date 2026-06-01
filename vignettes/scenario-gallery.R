@@ -165,7 +165,7 @@ graphics::par(old_par)
 # if (requireNamespace("ggWebGL", quietly = TRUE) &&
 #     utils::packageVersion("ggWebGL") >= "0.4.0") {
 #   ggWebGL::ggWebGL(
-#     as_ggwebgl_spec(sims$mixed_species_3d, vector_every = 12),
+#     as_ggwebgl_spec(sims$mixed_species_3d, trail_length = 30),
 #     height = 520
 #   )
 # }

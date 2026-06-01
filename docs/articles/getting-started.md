@@ -27,13 +27,16 @@ head(frames)
 ```
 
 The same frame table can be handed to visualization packages. If
-`ggWebGL` 0.4.0 or later is installed, the optional adapter creates
-point and velocity-vector primitives with exact timeline controls.
+`ggWebGL` 0.4.0 or later is installed, the optional adapter emphasizes
+current boids, keeps recent positions as faint trails, colours species
+and explicit prey/predator roles distinctly, draws velocity vectors in
+species colours by default, and includes visible rings for obstacles and
+predator influence zones.
 
 ``` r
 if (requireNamespace("ggWebGL", quietly = TRUE) &&
     utils::packageVersion("ggWebGL") >= "0.4.0") {
-  ggWebGL::ggWebGL(as_ggwebgl_spec(sim), height = 440)
+  ggWebGL::ggWebGL(as_ggwebgl_spec(sim, trail_length = 30), height = 440)
 }
 ```
 
@@ -50,16 +53,17 @@ stopifnot(
   utils::packageVersion("ggWebGL") >= "0.4.0"
 )
 
-sim <- boids4R::boids_scenario("murmuration_3d", n = 400, steps = 150, seed = 1)
+sim <- boids4R::boids_scenario("murmuration_3d", n = 400, steps = 240, seed = 1)
 
-spec <- boids4R::as_ggwebgl_spec(sim)
+spec <- boids4R::as_ggwebgl_spec(sim, trail_length = 30)
 spec$render$timeline$autoplay <- TRUE
 spec$render$timeline$speed <- 2
 
 w <- ggWebGL::ggWebGL(spec, height = 520)
 
-htmlwidgets::saveWidget(w, "boids_murmuration.html", selfcontained = FALSE)
-browseURL(normalizePath("boids_murmuration.html"))
+outfile <- file.path(tempdir(), "boids_murmuration.html")
+htmlwidgets::saveWidget(w, outfile, selfcontained = FALSE)
+browseURL(outfile)
 ```
 
 To see trajectories, not only moving current positions, use cumulative
@@ -105,6 +109,7 @@ spec <- ggWebGL::ggwebgl_spec(
   )
 )
 
-htmlwidgets::saveWidget(ggWebGL::ggWebGL(spec, height = 520), "boids_trails.html")
-browseURL(normalizePath("boids_trails.html"))
+outfile <- file.path(tempdir(), "boids_trails.html")
+htmlwidgets::saveWidget(ggWebGL::ggWebGL(spec, height = 520), outfile)
+browseURL(outfile)
 ```

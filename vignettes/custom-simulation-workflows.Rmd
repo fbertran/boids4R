@@ -321,7 +321,7 @@ graphics::legend("topright", legend = names(palette_3d), col = palette_3d, pch =
 if (requireNamespace("ggWebGL", quietly = TRUE) &&
     utils::packageVersion("ggWebGL") >= "0.4.0") {
   ggWebGL::ggWebGL(
-    as_ggwebgl_spec(mixed_3d, vector_every = 15),
+    as_ggwebgl_spec(mixed_3d, trail_length = 30),
     height = 540
   )
 }

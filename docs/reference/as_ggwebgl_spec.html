@@ -13,7 +13,7 @@ adapter without depending on ggWebGL at load time."><style>
 
     <a class="navbar-brand me-2" href="../index.html">boids4R</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,7 +56,33 @@ adapter without depending on ggWebGL at load time.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">as_ggwebgl_spec</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">as_ggwebgl_spec</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># S3 method for class 'boids_simulation'</span></span>
+<span><span class="fu">as_ggwebgl_spec</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  every <span class="op">=</span> <span class="fl">1L</span>,</span>
+<span>  vector_every <span class="op">=</span> <span class="fl">1L</span>,</span>
+<span>  vector_scale <span class="op">=</span> <span class="fl">0.08</span>,</span>
+<span>  shader <span class="op">=</span> <span class="st">"density_splat"</span>,</span>
+<span>  role_palette <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  boid_size <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>  prey_size <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  predator_size <span class="op">=</span> <span class="fl">8</span>,</span>
+<span>  current_alpha <span class="op">=</span> <span class="fl">0.9</span>,</span>
+<span>  trail_alpha <span class="op">=</span> <span class="fl">0.12</span>,</span>
+<span>  trail <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"recent"</span>, <span class="st">"none"</span>, <span class="st">"all"</span><span class="op">)</span>,</span>
+<span>  trail_length <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>  vector_mode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"current"</span>, <span class="st">"sampled"</span>, <span class="st">"all"</span>, <span class="st">"none"</span><span class="op">)</span>,</span>
+<span>  vector_colour_mode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"species"</span>, <span class="st">"role"</span>, <span class="st">"fixed"</span><span class="op">)</span>,</span>
+<span>  vector_colour <span class="op">=</span> <span class="st">"#334155"</span>,</span>
+<span>  vector_alpha <span class="op">=</span> <span class="fl">0.65</span>,</span>
+<span>  vector_width <span class="op">=</span> <span class="fl">1.2</span>,</span>
+<span>  obstacle_mode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ring"</span>, <span class="st">"disc"</span>, <span class="st">"none"</span><span class="op">)</span>,</span>
+<span>  obstacle_segments <span class="op">=</span> <span class="fl">48</span>,</span>
+<span>  obstacle_alpha <span class="op">=</span> <span class="fl">0.9</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -70,13 +96,100 @@ adapter without depending on ggWebGL at load time.</p>
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional arguments.</p></dd>
 
+
+<dt id="arg-every">every<a class="anchor" aria-label="anchor" href="#arg-every"></a></dt>
+<dd><p>Integer frame stride used before display layers are built.</p></dd>
+
+
+<dt id="arg-vector-every">vector_every<a class="anchor" aria-label="anchor" href="#arg-vector-every"></a></dt>
+<dd><p>Integer row stride used when <code>vector_mode = "sampled"</code>.</p></dd>
+
+
+<dt id="arg-vector-scale">vector_scale<a class="anchor" aria-label="anchor" href="#arg-vector-scale"></a></dt>
+<dd><p>Multiplier applied to velocity components when drawing
+velocity arrows.</p></dd>
+
+
+<dt id="arg-shader">shader<a class="anchor" aria-label="anchor" href="#arg-shader"></a></dt>
+<dd><p>ggWebGL shader name passed to the specification.</p></dd>
+
+
+<dt id="arg-role-palette">role_palette<a class="anchor" aria-label="anchor" href="#arg-role-palette"></a></dt>
+<dd><p>Optional named character vector overriding display
+colours. Names can include species labels, <code>species_1</code>, <code>species_2</code>,
+<code>species_3</code>, <code>prey</code>, <code>predator</code>, <code>obstacle</code>, <code>attractor</code>, <code>vector</code>, and
+<code>trail</code>.</p></dd>
+
+
+<dt id="arg-boid-size-prey-size-predator-size">boid_size, prey_size, predator_size<a class="anchor" aria-label="anchor" href="#arg-boid-size-prey-size-predator-size"></a></dt>
+<dd><p>Point sizes for ordinary boids and
+explicit prey/predator roles.</p></dd>
+
+
+<dt id="arg-current-alpha">current_alpha<a class="anchor" aria-label="anchor" href="#arg-current-alpha"></a></dt>
+<dd><p>Alpha for the current-position boid layer.</p></dd>
+
+
+<dt id="arg-trail-alpha">trail_alpha<a class="anchor" aria-label="anchor" href="#arg-trail-alpha"></a></dt>
+<dd><p>Alpha for historical trail points.</p></dd>
+
+
+<dt id="arg-trail">trail<a class="anchor" aria-label="anchor" href="#arg-trail"></a></dt>
+<dd><p>Trail rendering mode: <code>"recent"</code> shows a moving recent history,
+<code>"none"</code> omits history, and <code>"all"</code> shows all prior positions for each
+animation frame.</p></dd>
+
+
+<dt id="arg-trail-length">trail_length<a class="anchor" aria-label="anchor" href="#arg-trail-length"></a></dt>
+<dd><p>Number of simulation frame units retained when
+<code>trail = "recent"</code>.</p></dd>
+
+
+<dt id="arg-vector-mode">vector_mode<a class="anchor" aria-label="anchor" href="#arg-vector-mode"></a></dt>
+<dd><p>Velocity-arrow mode: <code>"current"</code> draws one arrow per boid
+at each animation frame, <code>"sampled"</code> applies <code>vector_every</code>, <code>"all"</code> draws
+every eligible row, and <code>"none"</code> omits arrows.</p></dd>
+
+
+<dt id="arg-vector-colour-mode">vector_colour_mode<a class="anchor" aria-label="anchor" href="#arg-vector-colour-mode"></a></dt>
+<dd><p>Velocity-arrow colour policy. <code>"species"</code> follows
+species colours, <code>"role"</code> follows explicit prey/predator role colours when
+present and otherwise falls back to species, and <code>"fixed"</code> uses
+<code>vector_colour</code>.</p></dd>
+
+
+<dt id="arg-vector-colour">vector_colour<a class="anchor" aria-label="anchor" href="#arg-vector-colour"></a></dt>
+<dd><p>Fixed velocity-arrow colour used when
+<code>vector_colour_mode = "fixed"</code>.</p></dd>
+
+
+<dt id="arg-vector-alpha-vector-width">vector_alpha, vector_width<a class="anchor" aria-label="anchor" href="#arg-vector-alpha-vector-width"></a></dt>
+<dd><p>Alpha and width for velocity arrows.</p></dd>
+
+
+<dt id="arg-obstacle-mode">obstacle_mode<a class="anchor" aria-label="anchor" href="#arg-obstacle-mode"></a></dt>
+<dd><p>Obstacle rendering mode. <code>"ring"</code> draws world-unit
+obstacle rings, <code>"disc"</code> draws denser concentric rings, and <code>"none"</code> omits
+obstacle primitives.</p></dd>
+
+
+<dt id="arg-obstacle-segments">obstacle_segments<a class="anchor" aria-label="anchor" href="#arg-obstacle-segments"></a></dt>
+<dd><p>Number of segments used to approximate each circular
+obstacle or predator influence zone.</p></dd>
+
+
+<dt id="arg-obstacle-alpha">obstacle_alpha<a class="anchor" aria-label="anchor" href="#arg-obstacle-alpha"></a></dt>
+<dd><p>Alpha for obstacle and predator influence rings.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>ggwebgl_spec</code> list for supported methods. For a
-<code>boids_simulation</code>, the list contains point and velocity-vector primitives,
-labels, WebGL view settings, selection options, and timeline metadata for
-rendering recorded boids frames with <code><a href="https://fbertran.github.io/ggWebGL/reference/ggWebGL.html" class="external-link">ggWebGL::ggWebGL()</a></code>.</p>
+<code>boids_simulation</code>, the list contains visible obstacle/predator context
+layers when available, faint historical trail points when requested,
+emphasized current boid positions, velocity-vector primitives, labels,
+WebGL view settings, selection options, and timeline metadata for rendering
+recorded boids frames with <code><a href="https://fbertran.github.io/ggWebGL/reference/ggWebGL.html" class="external-link">ggWebGL::ggWebGL()</a></code>.</p>
     </div>
 
     <div class="section level2">
@@ -85,11 +198,11 @@ rendering recorded boids frames with <code><a href="https://fbertran.github.io/g
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"ggWebGL"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span></span>
 <span class="r-in"><span>    <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html" class="external-link">packageVersion</a></span><span class="op">(</span><span class="st">"ggWebGL"</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="st">"0.4.0"</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span>  <span class="va">spec</span> <span class="op">&lt;-</span> <span class="fu">as_ggwebgl_spec</span><span class="op">(</span><span class="va">sim</span>, vector_every <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">spec</span> <span class="op">&lt;-</span> <span class="fu">as_ggwebgl_spec</span><span class="op">(</span><span class="va">sim</span>, trail <span class="op">=</span> <span class="st">"none"</span>, vector_mode <span class="op">=</span> <span class="st">"current"</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">spec</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "package_version" "labels"          "webgl"           "layer_count"    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "layers"          "render"         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "scene_version"   "package_version" "labels"          "webgl"          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "layer_count"     "layers"          "render"         </span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -275,12 +275,14 @@ graphics::par(old_par)
 ## Animate with ggWebGL
 
 When `ggWebGL` 0.4.0 or later is installed, any of these simulations can be
-handed to the optional adapter for timeline animation.
+handed to the optional adapter for timeline animation. Current boids are larger
+than trail points, recent history is faint, and velocity vectors inherit species
+colours unless a fixed or role-based vector colour policy is requested.
 
 ```{r eval = FALSE}
 if (requireNamespace("ggWebGL", quietly = TRUE) &&
     utils::packageVersion("ggWebGL") >= "0.4.0") {
-  spec <- as_ggwebgl_spec(flock_3d, vector_every = 14, shader = "density_splat")
+  spec <- as_ggwebgl_spec(flock_3d, trail_length = 30, shader = "density_splat")
   spec$render$timeline$autoplay <- TRUE
   ggWebGL::ggWebGL(spec, height = 540)
 }

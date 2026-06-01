@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">boids4R</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.3.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -286,13 +286,16 @@ the z coordinate.</p>
 </h2>
 <p>When <code>ggWebGL</code> 0.4.0 or later is installed, the same
 simulation object can be converted into a timeline-aware WebGL
-specification. This step is optional and leaves the core simulation
-object renderer-neutral.</p>
+specification. The adapter keeps current boids visually dominant, draws
+recent history as faint trails, colours velocity vectors by species by
+default, and includes visible rings for obstacles and predator influence
+zones. This step is optional and leaves the core simulation object
+renderer-neutral.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"ggWebGL"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span>
 <span>    <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/packageDescription.html" class="external-link">packageVersion</a></span><span class="op">(</span><span class="st">"ggWebGL"</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="st">"0.4.0"</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu">ggWebGL</span><span class="fu">::</span><span class="fu"><a href="https://fbertran.github.io/ggWebGL/reference/ggWebGL.html" class="external-link">ggWebGL</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="../reference/as_ggwebgl_spec.html">as_ggwebgl_spec</a></span><span class="op">(</span><span class="va">sims</span><span class="op">$</span><span class="va">mixed_species_3d</span>, vector_every <span class="op">=</span> <span class="fl">12</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="../reference/as_ggwebgl_spec.html">as_ggwebgl_spec</a></span><span class="op">(</span><span class="va">sims</span><span class="op">$</span><span class="va">mixed_species_3d</span>, trail_length <span class="op">=</span> <span class="fl">30</span><span class="op">)</span>,</span>
 <span>    height <span class="op">=</span> <span class="fl">520</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>

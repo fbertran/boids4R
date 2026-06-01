@@ -1,7 +1,7 @@
 Package: boids4R
 Title: Reynolds-Style Boids and Swarm Simulation
-Date: 2026-05-08
-Version: 0.3.1
+Date: 2026-06-01
+Version: 0.3.2
 Authors@R: c(
     person(given = "Frederic", family = "Bertrand", role = c("cre", "aut"),
            email = "frederic.bertrand@lecnam.net",

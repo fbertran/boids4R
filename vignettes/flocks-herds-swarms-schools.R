@@ -233,7 +233,7 @@ graphics::par(old_par)
 ## ----eval = FALSE-------------------------------------------------------------
 # if (requireNamespace("ggWebGL", quietly = TRUE) &&
 #     utils::packageVersion("ggWebGL") >= "0.4.0") {
-#   spec <- as_ggwebgl_spec(flock_3d, vector_every = 14, shader = "density_splat")
+#   spec <- as_ggwebgl_spec(flock_3d, trail_length = 30, shader = "density_splat")
 #   spec$render$timeline$autoplay <- TRUE
 #   ggWebGL::ggWebGL(spec, height = 540)
 # }

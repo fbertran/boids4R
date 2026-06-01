@@ -2,12 +2,19 @@
 
 ## boids4R 0.3.1
 
+CRAN release: 2026-05-13
+
 - Updated `DESCRIPTION` for CRAN resubmission by removing the redundant
   trailing “for R” from the title and adding the formal Reynolds (1987)
   <doi:10.1145/37402.37406> method reference.
 - Added the missing `\value{}` documentation for
   [`as_ggwebgl_spec()`](https://fbertran.github.io/boids4R/reference/as_ggwebgl_spec.md)
   and described the `ggwebgl_spec` output structure.
+- Improved
+  [`as_ggwebgl_spec()`](https://fbertran.github.io/boids4R/reference/as_ggwebgl_spec.md)
+  display defaults with high-contrast species and role palettes,
+  emphasized current boids, faint recent trails, species-aware velocity
+  vectors, and visible obstacle/predator rings.
 - Added alt text to the README logo image for pkgdown accessibility
   checks.
 

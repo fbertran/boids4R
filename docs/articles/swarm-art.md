@@ -476,7 +476,13 @@ checks and also writes only to
 if (requireNamespace("ggWebGL", quietly = TRUE) &&
     utils::packageVersion("ggWebGL") >= "0.4.0" &&
     requireNamespace("htmlwidgets", quietly = TRUE)) {
-  spec <- as_ggwebgl_spec(depth_sim, vector_every = 18, shader = "density_splat")
+  spec <- as_ggwebgl_spec(
+    depth_sim,
+    trail_length = 30,
+    vector_mode = "sampled",
+    vector_every = 18,
+    shader = "density_splat"
+  )
   spec$render$timeline$autoplay <- TRUE
   widget <- ggWebGL::ggWebGL(spec, height = 540)
 

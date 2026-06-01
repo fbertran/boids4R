@@ -2,20 +2,99 @@
 % Please edit documentation in R/ggwebgl-adapter.R
 \name{as_ggwebgl_spec}
 \alias{as_ggwebgl_spec}
+\alias{as_ggwebgl_spec.boids_simulation}
 \title{Convert an object to a ggWebGL primitive specification}
 \usage{
 as_ggwebgl_spec(x, ...)
+
+\method{as_ggwebgl_spec}{boids_simulation}(
+  x,
+  every = 1L,
+  vector_every = 1L,
+  vector_scale = 0.08,
+  shader = "density_splat",
+  role_palette = NULL,
+  boid_size = 4,
+  prey_size = 5,
+  predator_size = 8,
+  current_alpha = 0.9,
+  trail_alpha = 0.12,
+  trail = c("recent", "none", "all"),
+  trail_length = 30,
+  vector_mode = c("current", "sampled", "all", "none"),
+  vector_colour_mode = c("species", "role", "fixed"),
+  vector_colour = "#334155",
+  vector_alpha = 0.65,
+  vector_width = 1.2,
+  obstacle_mode = c("ring", "disc", "none"),
+  obstacle_segments = 48,
+  obstacle_alpha = 0.9,
+  ...
+)
 }
 \arguments{
 \item{x}{Object to convert.}
 
 \item{...}{Additional arguments.}
+
+\item{every}{Integer frame stride used before display layers are built.}
+
+\item{vector_every}{Integer row stride used when \code{vector_mode = "sampled"}.}
+
+\item{vector_scale}{Multiplier applied to velocity components when drawing
+velocity arrows.}
+
+\item{shader}{ggWebGL shader name passed to the specification.}
+
+\item{role_palette}{Optional named character vector overriding display
+colours. Names can include species labels, \code{species_1}, \code{species_2},
+\code{species_3}, \code{prey}, \code{predator}, \code{obstacle}, \code{attractor}, \code{vector}, and
+\code{trail}.}
+
+\item{boid_size, prey_size, predator_size}{Point sizes for ordinary boids and
+explicit prey/predator roles.}
+
+\item{current_alpha}{Alpha for the current-position boid layer.}
+
+\item{trail_alpha}{Alpha for historical trail points.}
+
+\item{trail}{Trail rendering mode: \code{"recent"} shows a moving recent history,
+\code{"none"} omits history, and \code{"all"} shows all prior positions for each
+animation frame.}
+
+\item{trail_length}{Number of simulation frame units retained when
+\code{trail = "recent"}.}
+
+\item{vector_mode}{Velocity-arrow mode: \code{"current"} draws one arrow per boid
+at each animation frame, \code{"sampled"} applies \code{vector_every}, \code{"all"} draws
+every eligible row, and \code{"none"} omits arrows.}
+
+\item{vector_colour_mode}{Velocity-arrow colour policy. \code{"species"} follows
+species colours, \code{"role"} follows explicit prey/predator role colours when
+present and otherwise falls back to species, and \code{"fixed"} uses
+\code{vector_colour}.}
+
+\item{vector_colour}{Fixed velocity-arrow colour used when
+\code{vector_colour_mode = "fixed"}.}
+
+\item{vector_alpha, vector_width}{Alpha and width for velocity arrows.}
+
+\item{obstacle_mode}{Obstacle rendering mode. \code{"ring"} draws world-unit
+obstacle rings, \code{"disc"} draws denser concentric rings, and \code{"none"} omits
+obstacle primitives.}
+
+\item{obstacle_segments}{Number of segments used to approximate each circular
+obstacle or predator influence zone.}
+
+\item{obstacle_alpha}{Alpha for obstacle and predator influence rings.}
 }
 \value{
 A \code{ggwebgl_spec} list for supported methods. For a
-\code{boids_simulation}, the list contains point and velocity-vector primitives,
-labels, WebGL view settings, selection options, and timeline metadata for
-rendering recorded boids frames with \code{ggWebGL::ggWebGL()}.
+\code{boids_simulation}, the list contains visible obstacle/predator context
+layers when available, faint historical trail points when requested,
+emphasized current boid positions, velocity-vector primitives, labels,
+WebGL view settings, selection options, and timeline metadata for rendering
+recorded boids frames with \code{ggWebGL::ggWebGL()}.
 }
 \description{
 This generic is defined locally so \code{boids4R} can offer an optional ggWebGL
@@ -26,7 +105,7 @@ sim <- boids_scenario("schooling_2d", n = 15, steps = 3, seed = 5)
 
 if (requireNamespace("ggWebGL", quietly = TRUE) &&
     utils::packageVersion("ggWebGL") >= "0.4.0") {
-  spec <- as_ggwebgl_spec(sim, vector_every = 10)
+  spec <- as_ggwebgl_spec(sim, trail = "none", vector_mode = "current")
   names(spec)
 }
 }

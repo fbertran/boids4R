@@ -22,14 +22,20 @@ simulation objects.
 ```{r eval = FALSE}
 library(boids4R)
 
-sim <- boids_scenario("murmuration_3d", n = 400, seed = 1)
+sim <- boids_scenario("murmuration_3d", n = 400, steps = 240, seed = 1)
 frames <- as.data.frame(sim)
 head(frames)
 
-if (requireNamespace("ggWebGL", quietly = TRUE)) {
-  ggWebGL::ggWebGL(as_ggwebgl_spec(sim), height = 520)
+if (requireNamespace("ggWebGL", quietly = TRUE) &&
+    utils::packageVersion("ggWebGL") >= "0.4.0") {
+  spec <- as_ggwebgl_spec(sim, trail_length = 30)
+  ggWebGL::ggWebGL(spec, height = 520)
 }
 ```
+
+The WebGL adapter emphasizes current boids, keeps recent history as faint
+trails, colours species and explicit prey/predator roles distinctly, and draws
+velocity arrows in species colours by default.
 
 ## References
 
